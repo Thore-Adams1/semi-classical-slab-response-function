@@ -1,0 +1,11 @@
+__pycache__/
+debug/
+# thesis_code.py Results
+*.pkl
+results*
+# Plots
+figs
+*.png
+# Profiling results
+*.lprof
+*.prof

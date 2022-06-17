@@ -1,0 +1,9 @@
+[MASTER]
+#disable=all
+
+# Only Enable Syntax Checking
+# Other error codes can be enabled, 
+# see http://pylint-messages.wikidot.com/all-codes for a complete list.
+enable=E,W
+
+disable=C

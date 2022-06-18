@@ -179,7 +179,7 @@ def update_arrays(p, cache):
     if m_changed or n_changed:
         if n_changed or L_changed:
             C["qn"] = C["n"] * xp.pi / p["L"]
-            p["Ln"] = p["L"] / (2 - (C["n"] == 0))
+            C["Ln"] = p["L"] / (2 - (C["n"] == 0))
         if m_changed or L_changed:
             # x = xp.random.rand(1000,1000,1000)
             # z = x.T
@@ -292,6 +292,8 @@ def update_arrays(p, cache):
         C["d_P"] = p["P"] * C["d"]
         C["P_e_iwl"] = p["P"] * C["e_iwl"]
     C["last_p"] = p.copy()
+    if "Ln" not in C:
+        import rpdb;rpdb.set_trace()
 
 
 # @profile
@@ -316,17 +318,17 @@ def compute_functions(functions, p, cache, result_only=False):
     # return {f: {"result":0} for f in functions}
     w_bar = p["w_bar"]
     update_arrays(p, cache)
+    C = cache
     P, L, Ln, Kx, wp, Vf = (
         p["P"],
         p["L"],
-        p["Ln"],
+        C["Ln"],
         p["Kx"],
         p["wp"],
         p["Vf"],
     )
 
     all_arrays = {Kx: {} for Kx in functions}
-    C = cache
     m, qm, n, qn = C["m"], C["qm"], C["n"], C["qn"]
     e_iwl = C["e_iwl"]
     k_dot_v = C["k_dot_v"]

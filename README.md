@@ -119,12 +119,15 @@ Testing was performed with the below command, suffixed with the additional argum
 ```bash
 python thesis_code.py G H -v w=0:1.2:3 Kx=0.001:0.4:10 -p steps=150 L=50 tau=10 P=0 -w
 ```
-Testing with an i5-10600K / 32GB RAM / RTX 3080 (10GB VRAM):
-|Variant|Additional Args|Time (H:M:S.ms)|
-|--------|---------|----------|
-|No Multiprocessing\*|| `0:06:38.946743`|
-|Multiprocessing (process per virtual cpu)|`-x`|`0:02:09.609565`|
-|GPU|`--gpu`|`0:00:14.559752`|
-|GPU (Larger tile size)|`--gpu -p max_tile_size=12,12`|`0:00:05.814009`|
+Testing with:
+- **System A**: i5-10600K / 32GB RAM / RTX 3080 (10GB VRAM)
+- **System B**: i7-12700KF / 32GB RAM (DDR5) / RTX 3080 (10GB VRAM)
+
+|Variant|Additional Args|System A (H:M:S.ms)|System B|
+|--------|---------|----------|---------|
+|No Multiprocessing\*|| `0:06:38.946743`|`0:05:18.815062`|
+|Multiprocessing (process per virtual cpu)|`-x`|`0:02:09.609565`|`0:01:07.827395`|
+|GPU|`--gpu`|`0:00:14.559752`|`0:00:07.670285`|
+|GPU (Larger tile size)|`--gpu -p max_tile_size=12,12`|`0:00:05.814009`|`0:00:05.757186`|
 
 >\*With some Numpy builds, threading is enabled by default. Here we are seeing some of the benefits of that included in the time. We disable this threading when using multiprocessing mode.

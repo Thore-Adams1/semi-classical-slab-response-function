@@ -292,8 +292,6 @@ def update_arrays(p, cache):
         C["d_P"] = p["P"] * C["d"]
         C["P_e_iwl"] = p["P"] * C["e_iwl"]
     C["last_p"] = p.copy()
-    if "Ln" not in C:
-        import rpdb;rpdb.set_trace()
 
 
 # @profile

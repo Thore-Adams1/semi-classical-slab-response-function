@@ -54,7 +54,7 @@ def get_commands(tc_args, given_args, pickles_dir):
         ]
         command_parts = [
             "python3",
-            os.path.join("~/sam-phys-code/", os.path.basename(tc.__file__)),
+            tc.__file__,
         ] + sanitised_args
         commands.append(" ".join(command_parts))
     return commands

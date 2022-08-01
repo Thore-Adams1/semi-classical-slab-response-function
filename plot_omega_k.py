@@ -27,11 +27,11 @@ def write_plot(
     array_2d,
     func_name,
     title,
-    results,
+    variable_params,
     figs_dir="figs",
 ):
-    w_vals_array = np.array(results.variable_params["w"])
-    Kx_vals_array = np.array(results.variable_params["Kx"])
+    w_vals_array = np.array(variable_params["w"])
+    Kx_vals_array = np.array(variable_params["Kx"])
     w_vals = w_vals_array.T * np.ones([len(Kx_vals_array), len(w_vals_array)])
     Kx_vals = np.ones([len(w_vals_array), len(Kx_vals_array)]) * Kx_vals_array.T
 
@@ -68,18 +68,25 @@ def cartesian_product(*arrays, reshaped=True):
         return arr
 
 
-def main(args):
+def load_results(pickle_files):
     from thesis_code import ResultsStorage, CombinedResults
 
-    if len(args.pickle_files) == 1:
-        with open(args.pickle_files[0], "rb") as f:
+    if len(pickle_files) == 1:
+        print("Loading {}".format(pickle_files[0]))
+        with open(pickle_files[0], "rb") as f:
             results = ResultsStorage.from_dict(pickle.load(f))
     else:
         all_results = []
-        for pickle_file in args.pickle_files:
+        for pickle_file in pickle_files:
             with open(pickle_file, "rb") as f:
+                print("Loading {}".format(pickle_file))
                 all_results.append(ResultsStorage.from_dict(pickle.load(f)))
         results = CombinedResults(all_results)
+    return results
+
+
+def generate_plots(args):
+    results = load_results(args.result_pickles)
     args.axes = ["m", "n"]
     args.variable_params = ["w", "Kx"]
 
@@ -91,14 +98,6 @@ def main(args):
     combination_indices = cartesian_product(
         *[np.arange(len(variable_params[v])) for v in args.variable_params]
     )
-    args.figs_dir = args.figs_dir or os.path.join(
-        "figs", datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    )
-    if not os.path.exists(args.figs_dir):
-        os.makedirs(args.figs_dir)
-
-    executor = None
-    futures = []
 
     progress_bar = tqdm(
         zip(param_combinations, combination_indices),
@@ -171,45 +170,74 @@ def main(args):
             1 - G_vec_minus.T * Hinvm * Z_minus_matrix
         )  # The poles of this function give anti-symmetric SPWs
 
+        sign_Hinvp, slog_Hinvp = np.linalg.slogdet(iden_w_sq - H_plus)
+        sign_Hinvm, slog_Hinvm = np.linalg.slogdet(iden_w_sq - H_minus)
+
+        Fp = sign_Hinvp * np.exp(slog_Hinvp)
+        Fm = sign_Hinvm * np.exp(slog_Hinvm)
+
         epsp_map[Kx_i, w_i] = epsp[0, 0]
         epsm_map[Kx_i, w_i] = epsm[0, 0]
-        Hinvp_map[Kx_i, w_i] = np.linalg.det(Hinvp)
-        Hinvm_map[Kx_i, w_i] = np.linalg.det(Hinvm)
+        
+        Hinvp_map[Kx_i, w_i] = 1/(Fp)
+        Hinvm_map[Kx_i, w_i] = 1/(Fm)
 
+    key_params = {p: results.parameters[p] for p in ("L", "tau")}
+    output_path = args.output_pkl or "plots.pkl"
+    file_path_pattern = "{}{{}}{}".format(*os.path.splitext(output_path))
+    i = 1
+    while os.path.exists(output_path):
+        i += 1
+        output_path = file_path_pattern.format(i)
+    plots = {
+        "pickle_paths": args.result_pickles,
+        "epsp_map": epsp_map,
+        "epsm_map": epsm_map,
+        "Hinvp_map": Hinvp_map,
+        "Hinvm_map": Hinvm_map,
+        "key_params": key_params,
+        "variable_params": results.variable_params,
+    }
+    with open(output_path, "wb") as f:
+        pickle.dump(plots, f)
+    print("Saved plots pickle to {}".format(output_path))
+    return plots
+
+
+def plot_omega_k(plots, variable_params, figs_dir):
     # z = 1 / (epsp_map.real**2)
     # path = write_plot({}, epsp_map.real, "result", figs_dir=args.figs_dir)
-    key_params = {p: results.parameters[p] for p in ("L", "tau")}
     path_epsp = write_plot(
-        key_params,
-        abs(1 / (epsp_map)) ** 2,
+        plots["key_params"],
+        abs(1 / (plots["epsp_map"])) ** 2,
         "epsp",
         r"$\left(\frac{1}{\left|\epsilon_{S}^{+}\right|}\right)^{2}$",
-        results,
-        figs_dir=args.figs_dir,
+        variable_params,
+        figs_dir=figs_dir,
     )
     path_epsm = write_plot(
-        key_params,
-        abs(1 / (epsm_map)) ** 2,
+        plots["key_params"],
+        abs(1 / (plots["epsm_map"])) ** 2,
         "epsm",
         r"$\left(\frac{1}{\left|\epsilon_{S}^{-}\right|}\right)^{2}$",
-        results,
-        figs_dir=args.figs_dir,
+        variable_params,
+        figs_dir=figs_dir,
     )
     path_Hinvp = write_plot(
-        key_params,
-        np.log(abs(Hinvp_map)),
+        plots["key_params"],
+        np.log(abs(plots["Hinvp_map"])),
         "Bulk+",
         r"$f_{-}(k, \omega)=\frac{1}{\left|\bar{\omega}^{2}-\mathscr{H}^{-}\right|}$",
-        results,
-        figs_dir=args.figs_dir,
+        variable_params,
+        figs_dir=figs_dir,
     )
     path_Hinvm = write_plot(
-        key_params,
-        np.log(abs(Hinvm_map)),
+        plots["key_params"],
+        np.log(abs(plots["Hinvm_map"])),
         "Bulk-",
         r"$f_{+}(k, \omega)=\frac{1}{\left|\bar{\omega}^{2}-\mathscr{H}^{+}\right|}$",
-        results,
-        figs_dir=args.figs_dir,
+        variable_params,
+        figs_dir=figs_dir,
     )
     print("Wrote plot: {}".format(path_epsp))
     print("Wrote plot: {}".format(path_epsm))
@@ -217,17 +245,47 @@ def main(args):
     print("Wrote plot: {}".format(path_Hinvm))
 
 
+def main(args):
+    if args.plot_pickle:
+        with open(args.plot_pickle, "rb") as f:
+            plots = pickle.load(f)
+        print("Loading results object for {}".format(args.plot_pickle))
+    else:
+        plots = generate_plots(args)
+
+    figs_dir = args.figs_dir or os.path.join(
+        "figs", datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    )
+
+    if not os.path.exists(figs_dir):
+        os.makedirs(figs_dir)
+
+    plot_omega_k(plots, plots["variable_params"], figs_dir)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument(
-        "pickle_files",
-        help="Pickle files with results. If multiple are given, will attempt to combine",
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "-r",
+        "--result-pickles",
         nargs="+",
+        help="Pickle files with results. If multiple are given, will attempt to combine",
+        metavar="path",
+    )
+    group.add_argument(
+        "-p", "--plot-pickle", help="Pickle files with plots.", metavar="path"
     )
     parser.add_argument(
         "-o",
+        "--output-pkl",
+        help="Where to save pickle files with plots. Defaults to a unique path in the current directory.",
+        metavar="path",
+    )
+    parser.add_argument(
+        "-f",
         "--figs-dir",
         action="store_true",
         help="Directory in which to store figures. Defaults to a timestamped \n"

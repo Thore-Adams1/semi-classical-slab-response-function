@@ -1,9 +1,13 @@
+#! /usr/bin/env python
 import os
 import sys
 import pipes
 import argparse
 import itertools
 
+USAGE = """\
+'a'\ build_thesis_code_chunks.py [-h] [-J] [thesis_code.py args]
+"""
 jobscript = """\
 #!/bin/bash --login
 ###
@@ -61,7 +65,7 @@ def get_commands(tc_args, given_args, pickles_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(usage=USAGE)
     parser.add_argument("-J", "--create-job-scripts", action="store_true")
     given_args = sys.argv[1:]
     args, given_args = parser.parse_known_args(given_args)

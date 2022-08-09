@@ -23,7 +23,8 @@ for information
 
 
 def write_plot(
-    axes, axis_labels,
+    axes,
+    axis_labels,
     iteration_params,
     array_2d,
     func_name,
@@ -31,7 +32,7 @@ def write_plot(
     variable_params,
     figs_dir="figs",
 ):
-    ax_v_array  = np.array(variable_params[axes[0]])
+    ax_v_array = np.array(variable_params[axes[0]])
     ax_h_array = np.array(variable_params[axes[1]])
     ax_v_vals = ax_v_array.T * np.ones([len(ax_h_array), len(ax_v_array)])
     ax_h_vals = np.ones([len(ax_v_array), len(ax_h_array)]) * ax_h_array.T
@@ -54,6 +55,7 @@ def write_plot(
     )
     fig_path = os.path.join(figs_dir, fig_name)
     plt.savefig(fig_path, dpi=300)
+    plt.close()
     return fig_path
 
 
@@ -88,7 +90,11 @@ def load_results(pickle_files):
 
 def generate_plots(args):
     results = load_results(args.result_pickles)
-    print("All variable params: {}".format(list(results.variable_params.keys())))
+    print(
+        "All variable params: {}".format(
+            ", ".join(f"{k} ({len(v)})" for k, v in results.variable_params.items())
+        )
+    )
     plots_pickle = {
         "pickle_paths": args.result_pickles,
         "variable_params": results.variable_params,
@@ -97,7 +103,9 @@ def generate_plots(args):
         "axis_labels": args.axis_labels,
     }
     additional_axes = [p for p in results.variable_params if p not in args.axes]
-    src_key_params = {p: results.parameters[p] for p in ("L", "tau") if p in results.parameters}
+    src_key_params = {
+        p: results.parameters[p] for p in ("L", "tau") if p in results.parameters
+    }
 
     variable_params = results.variable_params
     param_combinations = cartesian_product(
@@ -108,16 +116,21 @@ def generate_plots(args):
         *[np.arange(len(variable_params[v])) for v in args.axes]
     )
     if additional_axes:
-        additional_axes_count = np.product([len(variable_params[p]) for p in additional_axes])
-        additional_axes_indices = itertools.product(*[range(len(variable_params[p])) for p in additional_axes])
+        additional_axes_count = np.product(
+            [len(variable_params[p]) for p in additional_axes]
+        )
+        additional_axes_indices = itertools.product(
+            *[range(len(variable_params[p])) for p in additional_axes]
+        )
     else:
         additional_axes_indices = [()]
         additional_axes_count = 1
 
     progress_bar = tqdm(
         desc="\u2728 Calculating Epsilon \u2728",
-        total=param_combinations.shape[0]*additional_axes_count,
+        total=param_combinations.shape[0] * additional_axes_count,
     )
+
     def get_param(param, index):
         if param == args.axes[0]:
             return results.variable_params[param][index[0]]
@@ -127,21 +140,25 @@ def generate_plots(args):
             return results.parameters[param]
 
     for i, additional_axes_index in enumerate(additional_axes_indices):
-        progress_bar.set_postfix({"plot": f"{i+1}/{additional_axes_count}"})
+        progress_bar.set_postfix({"plot": f"{(i+1)*4}/{additional_axes_count*4}"})
         key_params = src_key_params.copy()
         for j, axis in enumerate(additional_axes):
             key_params[axis] = variable_params[axis][additional_axes_index[j]]
         epsp_map = np.empty(
-            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])], dtype=np.complex128
+            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])],
+            dtype=np.complex128,
         )
         epsm_map = np.empty(
-            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])], dtype=np.complex128
+            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])],
+            dtype=np.complex128,
         )
         Hinvp_map = np.empty(
-            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])], dtype=np.complex128
+            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])],
+            dtype=np.complex128,
         )
         Hinvm_map = np.empty(
-            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])], dtype=np.complex128
+            [len(variable_params[args.axes[1]]), len(variable_params[args.axes[0]])],
+            dtype=np.complex128,
         )
         for param_values, axes_index in zip(param_combinations, combination_indices):
             progress_bar.update(1)
@@ -155,7 +172,7 @@ def generate_plots(args):
                 else:
                     full_index.append(additional_axes_i.pop(0))
             full_index = tuple(full_index)
-            values = {v: vals for v, vals in zip(results.variable_params, param_values)}
+            values = {v: vals for v, vals in zip(args.axes, param_values)}
             index = {v: vals for v, vals in zip(results.variable_params, full_index)}
             ax_v_v, ax_h_v = values[args.axes[0]], values[args.axes[1]]
             ax_v_i, ax_h_i = index[args.axes[0]], index[args.axes[1]]
@@ -215,9 +232,9 @@ def generate_plots(args):
 
             epsp_map[ax_h_i, ax_v_i] = epsp[0, 0]
             epsm_map[ax_h_i, ax_v_i] = epsm[0, 0]
-            
-            Hinvp_map[ax_h_i, ax_v_i] = 1/(Fp)
-            Hinvm_map[ax_h_i, ax_v_i] = 1/(Fm)
+
+            Hinvp_map[ax_h_i, ax_v_i] = 1 / (Fp)
+            Hinvm_map[ax_h_i, ax_v_i] = 1 / (Fm)
 
         index_plots = {
             "epsp_map": epsp_map,
@@ -247,7 +264,8 @@ def plot(plots_pickle, variable_params, figs_dir):
     axis_labels = plots_pickle["axis_labels"]
     for plot in plots_pickle["plots"]:
         path_epsp = write_plot(
-            axes, axis_labels,
+            axes,
+            axis_labels,
             plot["key_params"],
             abs(1 / (plot["epsp_map"])) ** 2,
             "epsp",
@@ -256,7 +274,8 @@ def plot(plots_pickle, variable_params, figs_dir):
             figs_dir=figs_dir,
         )
         path_epsm = write_plot(
-            axes, axis_labels,
+            axes,
+            axis_labels,
             plot["key_params"],
             abs(1 / (plot["epsm_map"])) ** 2,
             "epsm",
@@ -265,7 +284,8 @@ def plot(plots_pickle, variable_params, figs_dir):
             figs_dir=figs_dir,
         )
         path_Hinvp = write_plot(
-            axes, axis_labels,
+            axes,
+            axis_labels,
             plot["key_params"],
             np.log(abs(plot["Hinvp_map"])),
             "Bulk+",
@@ -274,7 +294,8 @@ def plot(plots_pickle, variable_params, figs_dir):
             figs_dir=figs_dir,
         )
         path_Hinvm = write_plot(
-            axes, axis_labels,
+            axes,
+            axis_labels,
             plot["key_params"],
             np.log(abs(plot["Hinvm_map"])),
             "Bulk-",
@@ -312,8 +333,16 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("-x", "--axes", nargs=2, help="Axes to plot. Default: w Kx", default=["w", "Kx"])
-    parser.add_argument("-xl", "--axis-labels", nargs=2, help="Axes labels. Default: \omega K", default=["\omega", "K"])
+    parser.add_argument(
+        "-x", "--axes", nargs=2, help="Axes to plot. Default: w Kx", default=["w", "Kx"]
+    )
+    parser.add_argument(
+        "-xl",
+        "--axis-labels",
+        nargs=2,
+        help="Axes labels. Default: \omega K",
+        default=["\omega", "K"],
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-r",

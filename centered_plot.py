@@ -1,6 +1,8 @@
 """
-- in: Kx, L, tau
-- out: command with static k,l,tau and calculated omega by p command.
+Given args for a thesis_code.py command, return a list of 2 of thesis_code.py 
+commands for each value of Kx. (one for each the positive and negative branch 
+of the plasma waves) Each command will have an omega window that is
+centered corresponding the value of Kx, L & tau.
 """
 import argparse
 import sys
@@ -19,7 +21,8 @@ REQUIRED_CONSTANTS = ["L", "tau"]
 
 def main():
     parser = argparse.ArgumentParser(usage=USAGE)
-    parser.add_argument("-o", "--omega-steps", type=int, default=50, help="Number of omega values in output command.")
+    parser.add_argument("-ws", "--omega-steps", type=int, default=50, help="Number of omega values in output command.")
+    parser.add_argument("-o", "--output", default="centered/output_{w}_Kx_{Kx}.pkl", help="Output pkl paths pattern. Use {w} for w_plus / w_minus and {Kx} for the corresponding Kx value.")
     given_args = sys.argv[1:]
     args, given_args = parser.parse_known_args(given_args)
     tc_parser = tc.get_parser()
@@ -53,15 +56,16 @@ def main():
         w_pos_bounds = [w_pos - (2 / params["tau"]), w_pos + (2 / params["tau"])]
 
         w_lower, w_upper = 0, 1
-        w_neg_k_window = ["-v", "w={}:{}:{}".format(*w_neg_bounds, args.omega_steps)]
-        w_pos_k_window = ["-v", "w={}:{}:{}".format(*w_pos_bounds, args.omega_steps)]
+        w_neg_window = ["-v", "w={}:{}:{}".format(*w_neg_bounds, args.omega_steps)]
+        w_pos_window = ["-v", "w={}:{}:{}".format(*w_pos_bounds, args.omega_steps)]
 
-        for k_window in [w_neg_k_window, w_pos_k_window]:
+        for w_label, w_window in [("w_minus", w_neg_window), ("w_plus", w_pos_window)]:
+            output_args = [ "-o", args.output.format(w=w_label, Kx=Kx)]
             print(" ".join(
                 ["thesis_code.py"] + [
                 pipes.quote(s)
                 for s in given_args
-            ] + k_window
+            ] + w_window + output_args
             ))
         print()
 

@@ -66,7 +66,6 @@ def main():
         w_neg_bounds = [w_neg - (2 / params["tau"]), w_neg + (2 / params["tau"])]
         w_pos_bounds = [w_pos - (2 / params["tau"]), w_pos + (2 / params["tau"])]
 
-        w_lower, w_upper = 0, 1
         w_neg_window = ["-v", "w={}:{}:{}".format(*w_neg_bounds, args.omega_steps)]
         w_pos_window = ["-v", "w={}:{}:{}".format(*w_pos_bounds, args.omega_steps)]
 

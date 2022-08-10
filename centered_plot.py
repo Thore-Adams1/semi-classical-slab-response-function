@@ -14,13 +14,13 @@ import thesis_code as tc
 
 # Globals
 USAGE = """\
-centered_plot.py [-h] [thesis_code.py args]
+centered_plot.py [-h] [-ws OMEGA_STEPS] [-o OUTPUT] [thesis_code.py args]
 """
 REQUIRED_CONSTANTS = ["L", "tau"]
 
 
 def main():
-    parser = argparse.ArgumentParser(usage=USAGE,description=__doc__)
+    parser = argparse.ArgumentParser(usage=USAGE, description=__doc__)
     parser.add_argument(
         "-ws",
         "--omega-steps",

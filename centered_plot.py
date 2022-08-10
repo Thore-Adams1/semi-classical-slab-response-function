@@ -78,6 +78,7 @@ def main():
                     + [pipes.quote(s) for s in given_args]
                     + w_window
                     + output_args
+                    + ["-p", "Kx={}".format(Kx)]
                 )
             )
         print()

@@ -14,13 +14,18 @@ import thesis_code as tc
 
 # Globals
 USAGE = """\
-centered_plot.py [-h] [-ws OMEGA_STEPS] [-o OUTPUT] [thesis_code.py args]
+centered_plot.py [-h] SCRIPT [-ws OMEGA_STEPS] [-o OUTPUT] [thesis_code.py args]
 """
 REQUIRED_CONSTANTS = ["L", "tau"]
 
 
 def main():
     parser = argparse.ArgumentParser(usage=USAGE, description=__doc__)
+    parser.add_argument(
+        "script",
+        choices=("thesis_code.py", "build_thesis_code_chunks.py"),
+        help="The script to generate commands for.",
+    )
     parser.add_argument(
         "-ws",
         "--omega-steps",
@@ -37,7 +42,12 @@ def main():
     given_args = sys.argv[1:]
     args, given_args = parser.parse_known_args(given_args)
     tc_parser = tc.get_parser()
-    tc_args = tc_parser.parse_args(list(given_args))
+    tc_args, remainder_args = tc_parser.parse_known_args(list(given_args))
+    if args.script == "build_thesis_code_chunks.py":
+        from build_thesis_code_chunks import validate_args
+
+        validate_args(tc_args)
+
     params, variable_params = tc.get_parameters(tc_args)
 
     if "w" in params or "w" in variable_params:
@@ -73,7 +83,7 @@ def main():
             output_args = ["-o", args.output.format(w=w_label, Kx=Kx)]
             print(
                 " ".join(
-                    ["thesis_code.py"]
+                    [args.script]
                     + [pipes.quote(s) for s in given_args]
                     + w_window
                     + output_args

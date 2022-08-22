@@ -64,6 +64,15 @@ def get_commands(tc_args, given_args, pickles_dir):
     return commands
 
 
+def validate_args(tc_args):
+    if tc_args.chunk_id is not None:
+        raise ValueError(
+            "Chunk ID shouldn't be provided to this script. It's determined internally for each jobscript."
+        )
+    if tc_args.chunks is None:
+        raise ValueError("No chunks specified.")
+
+
 def main():
     parser = argparse.ArgumentParser(usage=USAGE)
     parser.add_argument("-J", "--create-job-scripts", action="store_true")
@@ -71,15 +80,7 @@ def main():
     args, given_args = parser.parse_known_args(given_args)
     tc_parser = tc.get_parser()
     tc_args = tc_parser.parse_args(list(given_args))
-    if tc_args.chunk_id is not None:
-        raise ValueError(
-            "Chunk ID shouldn't be provided to this script. It's determined internally for each jobscript."
-        )
-    if tc_args.chunks is None:
-        raise ValueError("Chunks should be provided to this script.")
-
-    if tc_args.output is not None:
-        raise ValueError("Output should NOT be provided to this script.")
+    validate_args(tc_args)
 
     var_str = "no_params"
     if tc_args.params is not None:
@@ -87,7 +88,17 @@ def main():
             "{}_{}".format(k, v)
             for k, v in itertools.chain.from_iterable(tc_args.params)
         )
-    job_root = get_unique_dir("results.{}.{{}}".format(var_str))
+
+    if tc_args.output is not None:
+        dirname = os.path.dirname(tc_args.output)
+        var_str += "_" + os.path.splitext(os.path.basename(tc_args.output))[0]
+        results_dir = "results.{}_{{}}".format(var_str)
+        if dirname:
+            results_dir = os.path.join(dirname, results_dir)
+    else:
+        results_dir = "results.{}_{{}}".format(var_str)
+
+    job_root = get_unique_dir(results_dir)
     pickles_dir = os.path.join(job_root, "pickles")
     jobscript_dir = os.path.join(job_root, "jobscripts")
     commands = get_commands(tc_args, given_args, pickles_dir)

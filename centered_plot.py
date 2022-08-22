@@ -1,6 +1,6 @@
 """
-Given args for a thesis_code.py command, return a list of 2 of thesis_code.py 
-commands for each value of Kx. (one for each the positive and negative branch 
+Given args for the specified script, return a list of 2 of script commands for 
+each value of Kx. (one for each the positive and negative branch 
 of the plasma waves) Each command will have an omega window that is
 centered corresponding the value of Kx, L & tau.
 """

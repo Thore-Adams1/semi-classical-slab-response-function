@@ -71,8 +71,8 @@ def main():
     print()
     for Kx in k_vals:
         e_neg_kl = np.exp(-Kx * params["L"])
-        w_neg = np.sqrt((1 - e_neg_kl) / 2)
-        w_pos = np.sqrt((1 + e_neg_kl) / 2)
+        w_neg = np.sqrt((1 + e_neg_kl) / 2)
+        w_pos = np.sqrt((1 - e_neg_kl) / 2)
         w_neg_bounds = [w_neg - (2 / params["tau"]), w_neg + (2 / params["tau"])]
         w_pos_bounds = [w_pos - (2 / params["tau"]), w_pos + (2 / params["tau"])]
 

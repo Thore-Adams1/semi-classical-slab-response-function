@@ -795,7 +795,9 @@ def main(args):
     params, variable_params = get_parameters(args)
     if args.chunks is not None:
         if args.chunk_parameter is None:
-            args.chunk_parameter = next(iter(variable_params.keys()))
+            args.chunk_parameter = max(
+                variable_params.keys(), key=lambda p: len(variable_params[p])
+            )
         if args.chunk_id is None:
             raise ValueError("No chunk id specified.")
         chunked_values = get_chunk(
@@ -1178,7 +1180,10 @@ def get_parser():
         "--chunk-parameter",
         type=str,
         default=None,
-        help="Parameter on which to chunk. Defaults to first variable parameter",
+        help=(
+            "Parameter on which to chunk. Defaults to variable parameter with "
+            "the most values."
+        ),
     )
     chunk_group.add_argument(
         "-I",

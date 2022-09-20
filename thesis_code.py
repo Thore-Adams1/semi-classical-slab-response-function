@@ -669,16 +669,22 @@ class ResultsProcessor(ResultsStorage):
         for f, arrs in self.m_n_arrays.items():
             for i, arr in enumerate(arrs):
                 if arr is not None:
-                    self.m_n_arrays[f][i] = arr.get()
+                    self.m_n_arrays[f][i] = ensure_numpy_array(arr)
         for f, arr in self.index_arrays.items():
-            self.index_arrays[f] = arr.get()
+            self.index_arrays[f] = ensure_numpy_array(arr)
 
     def add_m_n_array(self, function, i, array):
-        self.m_n_arrays[function][i] = array
+        self.m_n_arrays[function][i] = ensure_numpy_array(array)
 
     def add_m_n_arrays(self, i, arrays):
         for f, arr in zip(self.functions, arrays):
-            self.m_n_arrays[f][i] = arr
+            self.m_n_arrays[f][i] = ensure_numpy_array(arr)
+
+
+def ensure_numpy_array(arr):
+    if cp is not None and isinstance(arr, cp.ndarray):
+        return arr.get()
+    return arr
 
 
 def worker_calculate(
@@ -788,7 +794,8 @@ def main(args):
         gpu_id = cp.cuda.runtime.getDevice()
         gpu_info = cp.cuda.runtime.getDeviceProperties(gpu_id)
         print(
-            f"Using GPU {gpu_id}: '{gpu_info['name'].decode()}' with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
+            f"Using GPU {gpu_id}: {gpu_info['name'].decode()} "
+            f"with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
         )
 
     start_time = datetime.datetime.now()
@@ -815,6 +822,10 @@ def main(args):
     result_proc = ResultsProcessor(list(args.functions), params, variable_params)
 
     iterations = result_proc.get_tasks()
+    expected_file_size = (
+        result_proc.iteration_total * len(args.functions) * 16 / 1024 / 1024 / 1024
+    )
+    print(f"Expected File Size: {expected_file_size:.1f} GB")
     progress_bar = tqdm(
         desc="Computing Functions",
         total=result_proc.iteration_total,
@@ -826,6 +837,7 @@ def main(args):
         max_tile_size = result_proc.parameters["max_tile_size"]
         for iteration_params in iterations:
             mn = iteration_params["mn"]
+            progress_bar.postfix = create_postfix(iteration_params)
             p = result_proc.parameters.copy()
             p.update(iteration_params)
             mn_arrays = [
@@ -841,7 +853,6 @@ def main(args):
                     arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
             result_proc.add_m_n_arrays(p["i"], mn_arrays)
 
-            progress_bar.postfix = create_postfix(iteration_params)
             p.update(iteration_params)
     else:
         # Limit any multiprocessing within numpy

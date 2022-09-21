@@ -25,10 +25,10 @@ jobscript = """\
 #tasks to run per node (change for hybrid OpenMP/MPI)
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=40
-###
+{chunks}###
 #now run normal batch commands
 module load python/3.7.0
-{command}"""
+{gpu}{command}"""
 import thesis_code as tc
 
 
@@ -40,22 +40,32 @@ def get_unique_dir(pattern, start=1):
     return path
 
 
-def get_commands(tc_args, given_args, pickles_dir):
+def get_commands(args, tc_args, given_args, pickles_dir):
     commands = []
-    for chunk in range(1, tc_args.chunks + 1):
+    if args.create_job_script:
+        chunk_range = ["$SLURM_ARRAY_TASK_ID"]
+    else:
+        chunk_range = range(1, tc_args.chunks + 1)
+    for chunk in chunk_range:
         sanitised_args = [
             pipes.quote(s)
             for s in given_args
             + [
                 "--force",
-                "--output",
-                os.path.join(pickles_dir, "out.{}.pkl".format(chunk)),
-                "-I",
-                str(chunk),
                 "-u",
                 "60",
+                "--output",
             ]
         ]
+        sanitised_args.extend(
+            [
+                os.path.join(pickles_dir, "out.{}.pkl".format(chunk)).replace(
+                    " ", r"\ "
+                ),
+                "-I",
+                str(chunk),
+            ]
+        )
         command_parts = [
             "python3",
             tc.__file__,
@@ -75,7 +85,7 @@ def validate_args(tc_args):
 
 def main():
     parser = argparse.ArgumentParser(usage=USAGE)
-    parser.add_argument("-J", "--create-job-scripts", action="store_true")
+    parser.add_argument("-J", "--create-job-script", action="store_true")
     given_args = sys.argv[1:]
     args, given_args = parser.parse_known_args(given_args)
     tc_parser = tc.get_parser()
@@ -84,9 +94,11 @@ def main():
 
     var_str = "no_params"
     if tc_args.params is not None:
+        ignore_vars = {"max_tile_size"}
         var_str = "_".join(
             "{}_{}".format(k, v)
             for k, v in itertools.chain.from_iterable(tc_args.params)
+            if k not in ignore_vars
         )
 
     if tc_args.output is not None:
@@ -100,25 +112,33 @@ def main():
 
     job_root = get_unique_dir(results_dir)
     pickles_dir = os.path.join(job_root, "pickles")
-    jobscript_dir = os.path.join(job_root, "jobscripts")
-    commands = get_commands(tc_args, given_args, pickles_dir)
+    commands = get_commands(args, tc_args, given_args, pickles_dir)
     print("Job root dir: {}\nCommands:\n\n{}\n".format(job_root, "\n".join(commands)))
-    if args.create_job_scripts:
-        for dir_path in (job_root, pickles_dir, jobscript_dir):
+    if args.create_job_script:
+        if tc_args.gpu:
+            gpu_cmds = "module load cuda/11.3\npip install cupy-cuda113\n"
+        else:
+            gpu_cmds = ""
+        for dir_path in (job_root, pickles_dir):
             os.makedirs(dir_path)
-        job_scripts = []
-        job_script_path_template = os.path.join(jobscript_dir, "job.{}.sh")
-        for i, command in enumerate(commands, start=1):
-            job_script_path = job_script_path_template.format(i)
-            with open(job_script_path, "w") as f:
-                f.write(jobscript.format(name=var_str, command=command))
-            job_scripts.append(job_script_path)
+        job_script_path = os.path.join(job_root, "job.sh")
+        chunks_config = "#SBATCH --array=1{}\n".format(
+            "-{}".format(tc_args.chunks) if tc_args.chunks > 1 else ""
+        )
+        with open(job_script_path, "w") as f:
+            f.write(
+                jobscript.format(
+                    name=var_str,
+                    command=commands[0],
+                    gpu=gpu_cmds,
+                    chunks=chunks_config,
+                )
+            )
         print(
-            "To run the jobscripts, run the following commands:\n\n{}".format(
-                "\n".join(
-                    "sbatch --account=scw1772 {}".format(job_script)
-                    for job_script in job_scripts
-                ),
+            "To run the jobscripts, run the following command:\n\n{}".format(
+                "sbatch --account=scw1772 {}".format(
+                    job_script_path.replace("\\", "\\\\")
+                )
             )
         )
 

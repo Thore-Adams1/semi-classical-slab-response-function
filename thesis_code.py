@@ -43,6 +43,7 @@ import operator
 import multiprocessing as mp
 import math
 from concurrent.futures import ThreadPoolExecutor
+from subprocess import getoutput
 
 # Third Party
 from tqdm import tqdm
@@ -740,9 +741,9 @@ def worker_process(
     result_queue,
     progress,
     functions,
-    parameters,
+    args,
     process_id=None,
-    gpu=False,
+    gpu_id=None,
 ):
     # import cProfile
     # cProfile.runctx(
@@ -751,10 +752,12 @@ def worker_process(
     #     locals(),
     #     f"debug\\prof\\prof{i+1}.prof",
     # )
-    if gpu:
+    if gpu_id is not None:
         import cupy as cp
 
         globals()["xp"] = cp
+        cp.cuda.Device(gpu_id).use()
+    parameters, _ = get_parameters(args)
     worker_calculate(
         param_queue,
         result_queue,
@@ -781,6 +784,9 @@ def process_chunks(params, functions, chunk_size, cache):
 # @profile
 def main(args):
     """Main function."""
+    start_time = datetime.datetime.now()
+
+    gpus_to_use = []
     if args.gpu:
         if cp is None:
             raise RuntimeError(
@@ -789,35 +795,29 @@ def main(args):
             )
         else:
             globals()["xp"] = cp
-        if args.gpu_id is not None:
-            cp.cuda.Device(args.gpu_id).use()
-        gpu_id = cp.cuda.runtime.getDevice()
-        gpu_info = cp.cuda.runtime.getDeviceProperties(gpu_id)
-        print(
-            f"Using GPU {gpu_id}: {gpu_info['name'].decode()} "
-            f"with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
-        )
+        if args.gpu_ids:
+            for gpu_id in args.gpu_ids:
+                gpus_to_use.append(gpu_id)
+        elif args.all_gpus:
+            gpus_to_use = list(range(cp.cuda.runtime.getDeviceCount()))
+        else:
+            gpus_to_use = [cp.cuda.runtime.getDevice()]
+            cp.cuda.Device(gpus_to_use[0]).use()
+        if gpus_to_use:
+            print(f"Using {len(gpus_to_use)} GPU(s):")
+            for gpu_id in gpus_to_use:
+                gpu_info = cp.cuda.runtime.getDeviceProperties(gpu_id)
+                print(
+                    f"\tGPU {gpu_id}: {gpu_info['name'].decode()} "
+                    f"with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
+                )
+        else:
+            raise RuntimeError(
+                "No GPUs found! Please run without --gpu or check your "
+                "CUDA installation."
+            )
 
-    start_time = datetime.datetime.now()
-    params, variable_params = get_parameters(args)
-    if args.chunks is not None:
-        if args.chunk_parameter is None:
-            args.chunk_parameter = max(
-                variable_params.keys(), key=lambda p: len(variable_params[p])
-            )
-        if args.chunk_id is None:
-            raise ValueError("No chunk id specified.")
-        chunked_values = get_chunk(
-            variable_params[args.chunk_parameter], args.chunks, args.chunk_id
-        )
-        if chunked_values is None:
-            raise ValueError("Chunk {} has no values.".format(args.chunk_id))
-        print(
-            "Chunked values on axis {} [{}/{}]: {}".format(
-                args.chunk_parameter, args.chunk_id, args.chunks, chunked_values
-            )
-        )
-        variable_params[args.chunk_parameter] = chunked_values
+    params, variable_params = get_parameters(args, log=True)
 
     result_proc = ResultsProcessor(list(args.functions), params, variable_params)
 
@@ -833,7 +833,7 @@ def main(args):
     )
     create_postfix = lambda d: ",".join("{}={:g}".format(k, v) for k, v in d.items())
     C = {}
-    if not params["use_multiprocessing"]:
+    if not args.use_subprocesses:
         max_tile_size = result_proc.parameters["max_tile_size"]
         for iteration_params in iterations:
             mn = iteration_params["mn"]
@@ -855,19 +855,22 @@ def main(args):
 
             p.update(iteration_params)
     else:
-        # Limit any multiprocessing within numpy
-        os.environ["OMP_NUM_THREADS"] = "1"
-        os.environ["MKL_NUM_THREADS"] = "1"
-        os.environ["OPENBLAS_NUM_THREADS"] = "1"
-        os.environ["OPENBLAS_MAIN_FREE"] = "1"
-        os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-        os.environ["NUMEXPR_NUM_THREADS"] = "1"
+        if args.gpu:
+            args.subprocess_count = args.subprocess_count or len(gpus_to_use)
+        else:
+            # Limit any multiprocessing within numpy
+            os.environ["OMP_NUM_THREADS"] = "1"
+            os.environ["MKL_NUM_THREADS"] = "1"
+            os.environ["OPENBLAS_NUM_THREADS"] = "1"
+            os.environ["OPENBLAS_MAIN_FREE"] = "1"
+            os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+            os.environ["NUMEXPR_NUM_THREADS"] = "1"
+            args.subprocess_count = args.subprocess_count or os.cpu_count()
 
-        process_count = params.get("subprocesses", os.cpu_count())
         batch_size = min(
             (
                 params.get("mp_batch_size", 1),
-                result_proc.iteration_total // process_count,
+                result_proc.iteration_total // args.subprocess_count,
             )
         )
         total_arrays = 0
@@ -876,15 +879,17 @@ def main(args):
 
         progress_bar.write(
             "Using multiprocessing, max workers: {} - Batch size: {} - Arrays to compute: {}".format(
-                process_count, batch_size, total_arrays
+                args.subprocess_count, batch_size, total_arrays
             )
         )
-        process_queue_size = process_count * 8
+        process_queue_size = args.subprocess_count * 8
         param_queue = mp.Queue(maxsize=process_queue_size)
         result_queue = mp.Queue(maxsize=process_queue_size)
         progress_values = []
         processes = []
-        for i in range(process_count):
+        for i, gpu_id in zip(
+            range(args.subprocess_count), itertools.cycle(gpus_to_use or [None])
+        ):
             progress_value = mp.Value("i", 0, lock=False)
             progress_values.append(progress_value)
             process = mp.Process(
@@ -894,19 +899,19 @@ def main(args):
                     result_queue,
                     progress_value,
                     result_proc.functions,
-                    params,
+                    args,
                 ),
-                kwargs={"process_id": i, "gpu": args.gpu},
+                kwargs={"process_id": i, "gpu_id": gpu_id},
             )
             processes.append(process)
-        with ThreadPoolExecutor(max_workers=process_count) as executor:
+        with ThreadPoolExecutor(max_workers=args.subprocess_count) as executor:
             for process in processes:
                 executor.submit(process.start)
             executor.shutdown(wait=True)
         processing_time = datetime.datetime.now() - start_time
         progress_bar.write("--- Initialized processes: {} ---".format(processing_time))
         start_time = datetime.datetime.now()
-        postfix = {"CPUs": process_count}
+        postfix = {"Procs": args.subprocess_count}
         progress_bar.postfix = create_postfix(postfix)
 
         def queue_parameters(parameter_queue, iterations, batches, batch_size):
@@ -954,6 +959,7 @@ def main(args):
         result_proc.numpyify()
 
     results_dict = result_proc.as_dict()
+    results_dict["args"] = vars(args)
     processing_time = datetime.datetime.now() - start_time
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
@@ -975,18 +981,17 @@ def main(args):
     return results_dict
 
 
-def get_parameters(args):
+def get_parameters(args, log=False):
     """Get parameters from command line arguments.
     Args:
         args (argparse.Namespace): Command line arguments.
+        log (bool): Whether to log the parameters.
+
     Returns:
         tuple[dict, dict]: Parameters and variable parameters.
     """
     params = PARAM_DEFAULTS.copy()
     variable_params = {}
-    params["use_multiprocessing"] = args.use_subprocesses
-    if args.max_subprocesses:
-        params["subprocesses"] = args.max_subprocesses
 
     # Override parameters with -p arguments
     for param, value in itertools.chain.from_iterable(args.params or ()):
@@ -1010,7 +1015,6 @@ def get_parameters(args):
                 )
             )
         params[param] = value
-
     # Override variable parameters with -v arguments
     for param, values in itertools.chain.from_iterable(args.variable_params or ()):
         if (
@@ -1026,11 +1030,12 @@ def get_parameters(args):
             )
         variable_params[param] = values
 
-    print(
-        "Functions: {}\nParameters: {}\nVariable: {}".format(
-            args.functions, params, variable_params
+    if log:
+        print(
+            "Functions: {}\nParameters: {}\nVariable: {}".format(
+                args.functions, params, variable_params
+            )
         )
-    )
 
     # --- SET UP DEPENDENT PARAMETERS ---
     # Calculates theta and phi steps
@@ -1039,6 +1044,27 @@ def get_parameters(args):
     # Generates arrays for theta and phi based on the values previously defined
     params["theta_array"] = xp.linspace(0, params["theta_max"], params["steps"])
     params["phi_array"] = xp.linspace(0, params["phi_max"], params["steps"])
+
+    if args.chunks > 1:
+        if args.chunk_parameter is None:
+            args.chunk_parameter = max(
+                variable_params.keys(), key=lambda p: len(variable_params[p])
+            )
+        if args.chunk_id is None:
+            raise ValueError("No chunk id specified.")
+        chunked_values = get_chunk(
+            variable_params[args.chunk_parameter], args.chunks, args.chunk_id
+        )
+        if chunked_values is None:
+            raise ValueError("Chunk {} has no values.".format(args.chunk_id))
+        if log:
+            print(
+                "Chunked values on axis {} [{}/{}]: {}".format(
+                    args.chunk_parameter, args.chunk_id, args.chunks, chunked_values
+                )
+            )
+        variable_params[args.chunk_parameter] = chunked_values
+
     return params, variable_params
 
 
@@ -1131,7 +1157,6 @@ def get_parser():
         metavar="P=V1,V2,..,VN",
     )
     mp_group = parser.add_argument_group("Processing")
-    # process_mode = mp_group.add_mutually_exclusive_group()
     mp_group.add_argument(
         "-x", "--use-subprocesses", action="store_true", help="Use subprocesses."
     )
@@ -1141,17 +1166,34 @@ def get_parser():
         action="store_true",
         help=("Use the GPU. Requires a CUDA-enabled GPU and CuPy to be installed."),
     )
-    mp_group.add_argument(
-        "--gpu-id",
-        action="store_true",
-        help=("GPU id. Default's to the first available gpu."),
+    gpu_mode_group = mp_group.add_mutually_exclusive_group()
+    gpu_mode_group.add_argument(
+        "-G",
+        "--gpu-ids",
+        type=int,
+        nargs="+",
+        help=(
+            "Id(s) of GPUs)s to use. Default's to the first available "
+            "cuda-capable gpu."
+        ),
+    )
+    gpu_mode_group.add_argument(
+        "-A",
+        "--all-gpus",
+        action="store_const",
+        const=-1,
+        help="Use all available GPUs.",
     )
     mp_group.add_argument(
         "-m",
-        "--max-subprocesses",
+        "--subprocess-count",
         type=int,
         default=None,
-        help="Use this many subprocesses. Defaults to the processor core count.",
+        help=(
+            "Use this many subprocesses. Defaults to the processor core "
+            "count, unless --gpu is specified, in which case it defaults to 1 "
+            "per GPU in use."
+        ),
     )
     output_group = parser.add_argument_group("Output")
     output_group.add_argument(
@@ -1184,7 +1226,7 @@ def get_parser():
     )
     chunk_group = parser.add_argument_group("Chunking")
     chunk_group.add_argument(
-        "-C", "--chunks", type=int, default=None, help="Number of chunks."
+        "-C", "--chunks", type=int, default=1, help="Number of chunks."
     )
     chunk_group.add_argument(
         "-P",

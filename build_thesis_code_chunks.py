@@ -117,6 +117,7 @@ def main():
     if args.create_job_script:
         if tc_args.gpu:
             gpu_cmds = (
+                "#SBATCH --gres=gpu:2\n"
                 "#SBATCH -p gpu  # to request P100 GPUs\n"
                 "module load cuda/11.3\n"
                 "python3 -m pip install cupy-cuda113\n"

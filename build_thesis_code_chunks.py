@@ -116,7 +116,7 @@ def main():
     print("Job root dir: {}\nCommands:\n\n{}\n".format(job_root, "\n".join(commands)))
     if args.create_job_script:
         if tc_args.gpu:
-            gpu_cmds = "module load cuda/11.3\npip install cupy-cuda113\n"
+            gpu_cmds = "module load cuda/11.3\npython3 -m pip install cupy-cuda113\n"
         else:
             gpu_cmds = ""
         for dir_path in (job_root, pickles_dir):

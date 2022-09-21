@@ -787,6 +787,8 @@ def main(args):
     start_time = datetime.datetime.now()
 
     gpus_to_use = []
+    if args.all_gpus or args.gpu_ids:
+        args.gpu = True
     if args.gpu:
         if cp is None:
             raise RuntimeError(
@@ -1173,8 +1175,8 @@ def get_parser():
         type=int,
         nargs="+",
         help=(
-            "Id(s) of GPUs)s to use. Default's to the first available "
-            "cuda-capable gpu."
+            "Id(s) of GPUs)s to use. Default's to the first available\n"
+            "cuda-capable gpu. Implies --gpu."
         ),
     )
     gpu_mode_group.add_argument(
@@ -1182,7 +1184,7 @@ def get_parser():
         "--all-gpus",
         action="store_const",
         const=-1,
-        help="Use all available GPUs.",
+        help="Use all available GPUs. Implies --gpu.",
     )
     mp_group.add_argument(
         "-m",
@@ -1190,8 +1192,8 @@ def get_parser():
         type=int,
         default=None,
         help=(
-            "Use this many subprocesses. Defaults to the processor core "
-            "count, unless --gpu is specified, in which case it defaults to 1 "
+            "Use this many subprocesses. Defaults to the processor core\n"
+            "count, unless --gpu is specified, in which case it defaults to 1\n"
             "per GPU in use."
         ),
     )
@@ -1234,7 +1236,7 @@ def get_parser():
         type=str,
         default=None,
         help=(
-            "Parameter on which to chunk. Defaults to variable parameter with "
+            "Parameter on which to chunk. Defaults to variable parameter with\n"
             "the most values."
         ),
     )

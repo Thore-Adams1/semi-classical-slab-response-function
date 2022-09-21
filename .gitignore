@@ -1,5 +1,6 @@
 __pycache__/
 debug/
+__*.py
 # thesis_code.py Results
 *.pkl
 results*

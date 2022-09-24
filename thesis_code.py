@@ -787,8 +787,6 @@ def main(args):
     start_time = datetime.datetime.now()
 
     gpus_to_use = []
-    if args.all_gpus or args.gpu_ids:
-        args.gpu = True
     if args.gpu:
         if cp is None:
             raise RuntimeError(
@@ -858,6 +856,7 @@ def main(args):
             p.update(iteration_params)
     else:
         if args.gpu:
+            mp.set_start_method('spawn')
             args.subprocess_count = args.subprocess_count or len(gpus_to_use)
         else:
             # Limit any multiprocessing within numpy
@@ -1250,6 +1249,11 @@ def get_parser():
     return parser
 
 
+def set_arg_defaults(args):
+    if args.all_gpus or args.gpu_ids:
+        args.gpu = True
+
+
 def get_chunk(array, chunks, chunk_id):
     """
     > for i in range(1,6): print(i, get_chunk(list(range(12)), 5, i))
@@ -1305,4 +1309,5 @@ def tile_2d_arr(width, height, max_width, max_height):
 
 if __name__ == "__main__":
     arguments = get_parser().parse_args()
+    set_arg_defaults(arguments)
     main(arguments)

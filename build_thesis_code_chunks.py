@@ -4,6 +4,7 @@ import sys
 import pipes
 import argparse
 import itertools
+from textwrap import dedent
 
 USAGE = """\
 'a'\ build_thesis_code_chunks.py [-h] [-J] [thesis_code.py args]
@@ -25,10 +26,12 @@ jobscript = """\
 #tasks to run per node (change for hybrid OpenMP/MPI)
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=40
-{chunks}###
-#now run normal batch commands
+{gpu_sbatch}{chunks_sbatch}###
+echo "Loading Python"
 module load python/3.7.0
-{gpu}{command}"""
+{gpu_commands}
+echo "RUNNING CODE:"
+{command}"""
 import thesis_code as tc
 
 
@@ -90,6 +93,7 @@ def main():
     args, given_args = parser.parse_known_args(given_args)
     tc_parser = tc.get_parser()
     tc_args = tc_parser.parse_args(list(given_args))
+    tc.set_arg_defaults(tc_args)
     validate_args(tc_args)
 
     var_str = "no_params"
@@ -116,14 +120,26 @@ def main():
     print("Job root dir: {}\nCommands:\n\n{}\n".format(job_root, "\n".join(commands)))
     if args.create_job_script:
         if tc_args.gpu:
-            gpu_cmds = (
+            gpu_sbatch = (
                 "#SBATCH --gres=gpu:2\n"
                 "#SBATCH -p gpu  # to request P100 GPUs\n"
-                "module load cuda/11.3\n"
-                "python3 -m pip install cupy-cuda113\n"
             )
+            gpu_commands = dedent("""\
+                echo "GPU INFO:"
+                nvidia-smi
+                nvidia-smi -L
+                echo "AVAIL CUDA VERSIONS:"
+                module avail CUDA
+                echo "Loading CUDA:"
+                module load CUDA/11.5
+                echo "checking cupy"
+                python3 -c "import sys; print('Python Path: {}'.format(sys.path))"
+                python3 -m pip install cupy-cuda115 --user
+                echo "CuPy Packages: " `python3 -m pip freeze | grep cupy`
+                python3 -c "import cupy; print(cupy.show_config())"
+            """)
         else:
-            gpu_cmds = ""
+            gpu_sbatch, gpu_commands = "", ""
         for dir_path in (job_root, pickles_dir):
             os.makedirs(dir_path)
         job_script_path = os.path.join(job_root, "job.sh")
@@ -135,8 +151,9 @@ def main():
                 jobscript.format(
                     name=var_str,
                     command=commands[0],
-                    gpu=gpu_cmds,
-                    chunks=chunks_config,
+                    gpu_sbatch=gpu_sbatch,
+                    gpu_commands=gpu_commands,
+                    chunks_sbatch=chunks_config,
                 )
             )
         print(

@@ -114,7 +114,7 @@ def compare_results_with_matlab(results, temp_root=".validation"):
     """
 
     p = results.parameters
-    p["N"] = p["theta_max"]/ p["d_theta"]
+    p["N"] = p["theta_max"] / p["d_theta"]
     arrays_to_compare = {f: [] for f in results.functions}
     if not os.path.exists(temp_root):  #
         os.mkdir(temp_root)

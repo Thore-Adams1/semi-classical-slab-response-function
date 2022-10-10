@@ -171,7 +171,7 @@ def update_arrays(p, cache):
         if n_changed or L_changed:
             C["qn"] = C["n"] * xp.pi / p["L"]
             C["Ln"] = p["L"] / (2 - (C["n"] == 0))
-            C["qn_sq_vel_z_sq"] = smul(C["qn"]**2, C["vel_z_sq"])
+            C["qn_sq_vel_z_sq"] = smul(C["qn"] ** 2, C["vel_z_sq"])
         if m_changed or L_changed:
             # x = xp.random.rand(1000,1000,1000)
             # z = x.T
@@ -259,7 +259,15 @@ def update_arrays(p, cache):
         C["neg_m_e_iwl"] = 1 - smul(C["neg_1_m"], C["e_iwl"])
         C["At2s_fac1"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
         neg_1_m_e_iwl_cu_p_e_ewl = smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
-        C["A1_fac2"] = 2 * C["w_bar_w_til_vel_z"]* C["A1_a"] / ((C["w_til_sq"] - C["qn_sq_vel_z_sq"])*(C["w_til_sq"] - C["qm_sq_vel_z_sq"]))
+        C["A1_fac2"] = (
+            2
+            * C["w_bar_w_til_vel_z"]
+            * C["A1_a"]
+            / (
+                (C["w_til_sq"] - C["qn_sq_vel_z_sq"])
+                * (C["w_til_sq"] - C["qm_sq_vel_z_sq"])
+            )
+        )
 
         C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
         C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
@@ -364,7 +372,9 @@ def compute_functions(functions, p, cache, result_only=False):
             symmetry, C["neg_m_e_iwl"]
         ) * A1_b * (C["A1_fac1"] + k_dot_v)
 
-        At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (2*C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"]))
+        At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (
+            2 * C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
+        )
         e_iwl_n = 1 - smul(neg_1_n, e_iwl)
         e_iwl_n_fac5 = e_iwl_n * C["neg_m_e_iwl"]
         At1s2 = mn_mul(symmetry, e_iwl_n_fac5)
@@ -400,7 +410,9 @@ def compute_functions(functions, p, cache, result_only=False):
 
         neg_1_m_m_e_iwl_n = mn_mul(C["neg_1_m"], e_iwl_n)
         Hts2 = symmetry_w_bar_w_til_vel_z * (
-            fac1 * e_iwl_n_fac5 - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"] - fac3 * e_iwl_n * (1 - C["e_iwl_x_e_kx_L"])
+            fac1 * e_iwl_n_fac5
+            - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"]
+            - fac3 * e_iwl_n * (1 - C["e_iwl_x_e_kx_L"])
         )
 
         Htilde = Htb + C["d_P"] * (P * Hts1 + Hts2)
@@ -648,7 +660,9 @@ class ResultsProcessor(ResultsStorage):
             for i, m_n_array in enumerate(self.m_n_arrays[function]):
                 if m_n_array is None:
                     m_n_size = self.m_n_array_sizes[i]
-                    self.m_n_arrays[function][i] = arr = np.empty((m_n_size, m_n_size), dtype=self.dtype)
+                    self.m_n_arrays[function][i] = arr = np.empty(
+                        (m_n_size, m_n_size), dtype=self.dtype
+                    )
                     arr.fill(0)
 
     def get_tasks(self):
@@ -803,10 +817,12 @@ def main(args):
             gpus_to_use = [cp.cuda.runtime.getDevice()]
             cp.cuda.Device(gpus_to_use[0]).use()
         if not args.use_subprocesses and len(gpus_to_use) > 1:
-            print(f"Found >1 GPUs ({len(gpus_to_use)} found) - forcing multiprocessing mode.")
+            print(
+                f"Found >1 GPUs ({len(gpus_to_use)} found) - forcing multiprocessing mode."
+            )
             args.use_subprocesses = True
         if args.use_subprocesses:
-            mp.set_start_method('spawn')
+            mp.set_start_method("spawn")
         if gpus_to_use:
             print(f"Using {len(gpus_to_use)} GPU(s):")
             for gpu_id in gpus_to_use:
@@ -824,13 +840,22 @@ def main(args):
 
     params, variable_params = get_parameters(args, log=True)
 
-    result_proc = ResultsProcessor(list(args.functions), params, variable_params, dtype=dtype)
+    result_proc = ResultsProcessor(
+        list(args.functions), params, variable_params, dtype=dtype
+    )
 
     iterations = result_proc.get_tasks()
     expected_file_size = (
-        result_proc.iteration_total * len(args.functions) * xp.dtype(dtype).itemsize / 1024 / 1024 / 1024
+        result_proc.iteration_total
+        * len(args.functions)
+        * xp.dtype(dtype).itemsize
+        / 1024
+        / 1024
+        / 1024
     )
-    print(f"Expected File Size: {expected_file_size:.1f} GB (Data Type: complex{args.dtype})")
+    print(
+        f"Expected File Size: {expected_file_size:.1f} GB (Data Type: complex{args.dtype})"
+    )
     result_proc.reserve_memory()
     progress_bar = tqdm(
         desc="Computing Functions",

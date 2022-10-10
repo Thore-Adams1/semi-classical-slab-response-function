@@ -364,9 +364,8 @@ def compute_functions(functions, p, cache, result_only=False):
             symmetry, C["neg_m_e_iwl"]
         ) * A1_b * (C["A1_fac1"] + k_dot_v)
 
-        A1_c = 2 * C["w_bar_w_til_vel_z"] * C["A1_a"] / A1_divisor1
-        At1s1 = mn_mul(-symmetry, A1_c) * C["A1_fac2"]
-        e_iwl_n = smul((1 - (neg_1_n)), e_iwl)
+        At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (2*C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"]))
+        e_iwl_n = 1 - smul(neg_1_n, e_iwl)
         e_iwl_n_fac5 = e_iwl_n * C["neg_m_e_iwl"]
         At1s2 = mn_mul(symmetry, e_iwl_n_fac5)
 
@@ -430,6 +429,7 @@ def compute_functions(functions, p, cache, result_only=False):
             # Clear some memory if these aren't needed
             del func_arrays["array"]
             del func_arrays["integral"]
+    import pdb;pdb.set_trace()
     return all_arrays
 
 

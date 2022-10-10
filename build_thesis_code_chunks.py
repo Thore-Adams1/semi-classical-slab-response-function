@@ -19,7 +19,7 @@ jobscript = """\
 #job stderr file
 #SBATCH --error=bench.err.%J
 #maximum job time in D-HH:MM
-#SBATCH --time=3-00:00
+#SBATCH --time={max_days}-00:00
 #number of parallel processes (tasks) you are requesting - maps to MPI processes
 #SBATCH --ntasks=1
 #memory per process in MB
@@ -154,6 +154,7 @@ def main():
                     gpu_sbatch=gpu_sbatch,
                     gpu_commands=gpu_commands,
                     chunks_sbatch=chunks_config,
+                    max_days=1 if tc_args.gpu else 3,
                 )
             )
         print(

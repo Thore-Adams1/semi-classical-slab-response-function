@@ -105,16 +105,6 @@ def values_differ(d1, d2, keys):
             return True
 
 
-# def cartesian_product(*arrays, reshaped=True):
-#     la = len(arrays)
-#     dtype = xp.result_type(*arrays)
-#     arr = xp.empty([len(a) for a in arrays] + [la], dtype=dtype)
-#     for i, a in enumerate(xp.ix_(*arrays)):
-#         arr[..., i] = a
-#     if reshaped:
-#         return arr.reshape(-1, la)
-#     else:
-#         return arr
 def op_across_axes(arr_a, arr_b, axes, op):
     """Multiply two arrays along the given axes."""
     return (op(arr_a, arr_b.transpose(axes))).transpose(np.argsort(axes))
@@ -181,6 +171,7 @@ def update_arrays(p, cache):
         if n_changed or L_changed:
             C["qn"] = C["n"] * xp.pi / p["L"]
             C["Ln"] = p["L"] / (2 - (C["n"] == 0))
+            C["qn_sq_vel_z_sq"] = smul(C["qn"]**2, C["vel_z_sq"])
         if m_changed or L_changed:
             # x = xp.random.rand(1000,1000,1000)
             # z = x.T
@@ -268,9 +259,9 @@ def update_arrays(p, cache):
         C["neg_m_e_iwl"] = 1 - smul(C["neg_1_m"], C["e_iwl"])
         C["At2s_fac1"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
         neg_1_m_e_iwl_cu_p_e_ewl = smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
-        C["A1_fac2"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
+        C["A1_fac2"] = 2 * C["w_bar_w_til_vel_z"]* C["A1_a"] / ((C["w_til_sq"] - C["qn_sq_vel_z_sq"])*(C["w_til_sq"] - C["qm_sq_vel_z_sq"]))
 
-        C["Hts1_a"] = C["A1_fac2"]
+        C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
         C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
             C["neg_1_m"], C["e_iwl_m_e_kx_L"] * C["e_iwl_sq"]
         )
@@ -289,7 +280,7 @@ def update_arrays(p, cache):
         )
     if d_changed:
         # calcuate d
-        C["d"] = 1 - (p["P"] ** 2 * C["e_iwl"])
+        C["d"] = 1 / (1 - (p["P"] ** 2 * C["e_iwl_sq"]))
         C["d_P"] = p["P"] * C["d"]
         C["P_e_iwl"] = p["P"] * C["e_iwl"]
     C["last_p"] = p.copy()
@@ -366,8 +357,7 @@ def compute_functions(functions, p, cache, result_only=False):
         all_arrays["G"]["array"] = Gtilde
 
     if "A1" in functions or "H" in functions:
-        qn_sq_vel_z_sq = smul(qn**2, C["vel_z_sq"])
-        w_til_sq_m_qn_sq_vel_z_sq = C["w_til_sq"] - qn_sq_vel_z_sq
+        w_til_sq_m_qn_sq_vel_z_sq = C["w_til_sq"] - C["qn_sq_vel_z_sq"]
         A1_divisor1 = w_til_sq_m_qn_sq_vel_z_sq * C["w_til_sq_m_qm_sq_vel_z_sq"]
         A1_b = C["w_til_vel_z"] / w_til_sq_m_qn_sq_vel_z_sq
         At1b = mn_mul((n == m) * (Ln / 1j), C["A1_fac1"]) - mn_mul(
@@ -614,8 +604,9 @@ class CombinedResults(ResultsBase):
 
 
 class ResultsProcessor(ResultsStorage):
-    def __init__(self, functions, parameters, variable_params):
+    def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
         super().__init__(functions, parameters, variable_params)
+        self.dtype = dtype
         if not variable_params:
             raise ValueError("No variable parameters provided.")
         m_n_array_total = 1
@@ -649,12 +640,21 @@ class ResultsProcessor(ResultsStorage):
             index = []
             for j, _ in values:
                 index.append(j)
+            self.m_n_array_sizes[i] = m_n_size
             for function in functions:
-                self.m_n_array_sizes[i] = m_n_size
                 self.index_arrays[function][tuple(index)] = i
 
             self.iteration_total += m_n_size**2
         self.parameters["max_m_n_size"] = max_m_n_size
+
+    def reserve_memory(self):
+        # reserve array mem - so that memory errors are raised early
+        for function in self.functions:
+            for i, m_n_array in enumerate(self.m_n_arrays[function]):
+                if m_n_array is None:
+                    m_n_size = self.m_n_array_sizes[i]
+                    self.m_n_arrays[function][i] = arr = np.empty((m_n_size, m_n_size), dtype=self.dtype)
+                    arr.fill(0)
 
     def get_tasks(self):
         f = next(iter(self.functions), None)
@@ -689,7 +689,7 @@ def ensure_numpy_array(arr):
 
 
 def worker_calculate(
-    param_queue, result_queue, progress, functions, parameters, process_id=None
+    param_queue, result_queue, progress, functions, parameters, dtype, process_id=None
 ):
     """Worker process for multiprocessing.
 
@@ -723,7 +723,7 @@ def worker_calculate(
             params = parameters.copy()
             params.update(iteration_params)
             mn_arrays = [
-                xp.full([iteration_params["mn"]] * 2, -1, dtype=xp.complex128)
+                xp.full([iteration_params["mn"]] * 2, -1, dtype=dtype)
                 for _ in functions
             ]
             for chunk, arrays in process_chunks(params, functions, max_tile_size, C):
@@ -742,6 +742,7 @@ def worker_process(
     progress,
     functions,
     args,
+    dtype=None,
     process_id=None,
     gpu_id=None,
 ):
@@ -757,6 +758,8 @@ def worker_process(
 
         globals()["xp"] = cp
         cp.cuda.Device(gpu_id).use()
+    if dtype is None:
+        dtype = xp.complex128
     parameters, _ = get_parameters(args)
     worker_calculate(
         param_queue,
@@ -764,6 +767,7 @@ def worker_process(
         progress,
         functions,
         parameters,
+        dtype,
         process_id=process_id,
     )
 
@@ -803,6 +807,11 @@ def main(args):
         else:
             gpus_to_use = [cp.cuda.runtime.getDevice()]
             cp.cuda.Device(gpus_to_use[0]).use()
+        if not args.use_subprocesses and len(gpus_to_use) > 1:
+            print(f"Found >1 GPUs ({len(gpus_to_use)} found) - forcing multiprocessing mode.")
+            args.use_subprocesses = True
+        if args.use_subprocesses:
+            mp.set_start_method('spawn')
         if gpus_to_use:
             print(f"Using {len(gpus_to_use)} GPU(s):")
             for gpu_id in gpus_to_use:
@@ -816,16 +825,18 @@ def main(args):
                 "No GPUs found! Please run without --gpu or check your "
                 "CUDA installation."
             )
+    dtype = getattr(np, f"complex{args.dtype}")
 
     params, variable_params = get_parameters(args, log=True)
 
-    result_proc = ResultsProcessor(list(args.functions), params, variable_params)
+    result_proc = ResultsProcessor(list(args.functions), params, variable_params, dtype=dtype)
 
     iterations = result_proc.get_tasks()
     expected_file_size = (
-        result_proc.iteration_total * len(args.functions) * 16 / 1024 / 1024 / 1024
+        result_proc.iteration_total * len(args.functions) * xp.dtype(dtype).itemsize / 1024 / 1024 / 1024
     )
-    print(f"Expected File Size: {expected_file_size:.1f} GB")
+    print(f"Expected File Size: {expected_file_size:.1f} GB (Data Type: complex{args.dtype})")
+    result_proc.reserve_memory()
     progress_bar = tqdm(
         desc="Computing Functions",
         total=result_proc.iteration_total,
@@ -856,7 +867,6 @@ def main(args):
             p.update(iteration_params)
     else:
         if args.gpu:
-            mp.set_start_method('spawn')
             args.subprocess_count = args.subprocess_count or len(gpus_to_use)
         else:
             # Limit any multiprocessing within numpy
@@ -902,7 +912,7 @@ def main(args):
                     result_proc.functions,
                     args,
                 ),
-                kwargs={"process_id": i, "gpu_id": gpu_id},
+                kwargs={"process_id": i, "gpu_id": gpu_id, "dtype": dtype},
             )
             processes.append(process)
         with ThreadPoolExecutor(max_workers=args.subprocess_count) as executor:
@@ -1156,6 +1166,13 @@ def get_parser():
         ),
         action="append",
         metavar="P=V1,V2,..,VN",
+    )
+    inputs_group.add_argument(
+        "-d",
+        "--dtype",
+        choices=["64", "128", "256"],
+        default="128",
+        help="Complex data type to use for calculations.",
     )
     mp_group = parser.add_argument_group("Processing")
     mp_group.add_argument(

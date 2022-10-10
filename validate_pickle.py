@@ -55,7 +55,6 @@ def check_arrays_match(array_a, array_b, name="", tolerance=1e-9):
             msg = f"diverge by a maximum of {tol:g} at index {tol_i}!"
         result = False
     print("{}arrays {}".format(name + " " if name else "", msg))
-    # import pdb; pdb.set_trace()
     return result
 
 
@@ -95,13 +94,15 @@ def compare_results_with_matlab(results, temp_root=".validation"):
     m_max = {m_max};
     n_max = {n_max};
     omega = {w};
+    N = {N};
+    wp = 1;
     A1_array = zeros(m_max+1, n_max+1);
     A2_array = A1_array;
     G_array = A1_array;
     H_array = A1_array;
     for m = 0:m_max;
         for n = 0:n_max;
-            [A1,A2,G,H,~,~,~,~] = get_matelement(n,m,kvec,omega,tau,p,L,dtheta,dphi,vF);
+            [A1,A2,G,H,~,~,~,~] = get_matelement(n,m,kvec,omega,tau,L,p,N,vF,wp);
             A1_array(m+1,n+1) = A1;
             A2_array(m+1,n+1) = A2;
             G_array(m+1,n+1) = G;
@@ -113,6 +114,7 @@ def compare_results_with_matlab(results, temp_root=".validation"):
     """
 
     p = results.parameters
+    p["N"] = p["theta_max"]/ p["d_theta"]
     arrays_to_compare = {f: [] for f in results.functions}
     if not os.path.exists(temp_root):  #
         os.mkdir(temp_root)

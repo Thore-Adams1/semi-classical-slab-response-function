@@ -121,10 +121,10 @@ def main():
     if args.create_job_script:
         if tc_args.gpu:
             gpu_sbatch = (
-                "#SBATCH --gres=gpu:2\n"
-                "#SBATCH -p gpu  # to request P100 GPUs\n"
+                "#SBATCH --gres=gpu:2\n" "#SBATCH -p gpu  # to request P100 GPUs\n"
             )
-            gpu_commands = dedent("""\
+            gpu_commands = dedent(
+                """\
                 echo "GPU INFO:"
                 nvidia-smi
                 nvidia-smi -L
@@ -137,7 +137,8 @@ def main():
                 python3 -m pip install cupy-cuda115 --user
                 echo "CuPy Packages: " `python3 -m pip freeze | grep cupy`
                 python3 -c "import cupy; print(cupy.show_config())"
-            """)
+            """
+            )
         else:
             gpu_sbatch, gpu_commands = "", ""
         for dir_path in (job_root, pickles_dir):

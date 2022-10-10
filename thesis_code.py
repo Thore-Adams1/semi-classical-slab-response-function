@@ -398,13 +398,9 @@ def compute_functions(functions, p, cache, result_only=False):
             fac1 * C["Hts1_a"] + fac2 * C["Hts1_b"] + fac3 * C["Hts1_c"]
         )
 
-        neg_1_m_m_e_iwl_n = mn_mul(
-            C["neg_1_m"], xp.stack([e_iwl_n[:, 0, ...]] * len(C["m"]), axis=0)
-        )
+        neg_1_m_m_e_iwl_n = mn_mul(C["neg_1_m"], e_iwl_n)
         Hts2 = symmetry_w_bar_w_til_vel_z * (
-            fac1 * e_iwl_n_fac5
-            - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"]
-            - fac3 * e_iwl_n * (1 - C["e_iwl_x_e_kx_L"])
+            fac1 * e_iwl_n_fac5 - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"] - fac3 * e_iwl_n * (1 - C["e_iwl_x_e_kx_L"])
         )
 
         Htilde = Htb + C["d_P"] * (P * Hts1 + Hts2)

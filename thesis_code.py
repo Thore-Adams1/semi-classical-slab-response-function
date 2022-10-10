@@ -227,7 +227,6 @@ def update_arrays(p, cache):
         C["Gts_arr_1"] = C["e_iwl_m_e_kx_L"] * C["e_iwl"]
         C["Gts_arr_3"] = C["e_iwl_sq"] * C["e_kx_L"] - C["e_iwl"]
         C["Gts_arr_4"] = 1 - C["e_iwl"] * C["e_kx_L"]
-        C["e_kx_L_m_e_iwl"] = C["e_kx_L"] - C["e_iwl"]
     if w_til_changed or m_changed:
         C["w_til_m_qm_vel_z"] = C["w_til"] - C["qm_vel_z"]
         C["w_til_p_qm_vel_z"] = C["w_til"] + C["qm_vel_z"]

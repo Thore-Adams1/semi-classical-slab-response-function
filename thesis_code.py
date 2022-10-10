@@ -429,7 +429,6 @@ def compute_functions(functions, p, cache, result_only=False):
             # Clear some memory if these aren't needed
             del func_arrays["array"]
             del func_arrays["integral"]
-    import pdb;pdb.set_trace()
     return all_arrays
 
 

@@ -43,6 +43,7 @@ import operator
 import multiprocessing as mp
 import math
 from concurrent.futures import ThreadPoolExecutor
+from subprocess import getoutput
 
 # Third Party
 from tqdm import tqdm
@@ -104,16 +105,6 @@ def values_differ(d1, d2, keys):
             return True
 
 
-# def cartesian_product(*arrays, reshaped=True):
-#     la = len(arrays)
-#     dtype = xp.result_type(*arrays)
-#     arr = xp.empty([len(a) for a in arrays] + [la], dtype=dtype)
-#     for i, a in enumerate(xp.ix_(*arrays)):
-#         arr[..., i] = a
-#     if reshaped:
-#         return arr.reshape(-1, la)
-#     else:
-#         return arr
 def op_across_axes(arr_a, arr_b, axes, op):
     """Multiply two arrays along the given axes."""
     return (op(arr_a, arr_b.transpose(axes))).transpose(np.argsort(axes))
@@ -180,6 +171,7 @@ def update_arrays(p, cache):
         if n_changed or L_changed:
             C["qn"] = C["n"] * xp.pi / p["L"]
             C["Ln"] = p["L"] / (2 - (C["n"] == 0))
+            C["qn_sq_vel_z_sq"] = smul(C["qn"] ** 2, C["vel_z_sq"])
         if m_changed or L_changed:
             # x = xp.random.rand(1000,1000,1000)
             # z = x.T
@@ -235,7 +227,6 @@ def update_arrays(p, cache):
         C["Gts_arr_1"] = C["e_iwl_m_e_kx_L"] * C["e_iwl"]
         C["Gts_arr_3"] = C["e_iwl_sq"] * C["e_kx_L"] - C["e_iwl"]
         C["Gts_arr_4"] = 1 - C["e_iwl"] * C["e_kx_L"]
-        C["e_kx_L_m_e_iwl"] = C["e_kx_L"] - C["e_iwl"]
     if w_til_changed or m_changed:
         C["w_til_m_qm_vel_z"] = C["w_til"] - C["qm_vel_z"]
         C["w_til_p_qm_vel_z"] = C["w_til"] + C["qm_vel_z"]
@@ -267,14 +258,23 @@ def update_arrays(p, cache):
         C["neg_m_e_iwl"] = 1 - smul(C["neg_1_m"], C["e_iwl"])
         C["At2s_fac1"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
         neg_1_m_e_iwl_cu_p_e_ewl = smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
-        C["A1_fac2"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
 
-        C["Hts1_a"] = C["A1_fac2"]
+        C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
         C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
             C["neg_1_m"], C["e_iwl_m_e_kx_L"] * C["e_iwl_sq"]
         )
         C["Hts1_c"] = (C["e_iwl_cu_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
             C["neg_1_m"], (C["e_iwl"] - C["e_iwl_sq_x_e_kx_L"])
+        )
+    if e_exp_changed or m_changed or n_changed:
+        C["A1_fac2"] = (
+            2
+            * C["w_bar_w_til_vel_z"]
+            * C["A1_a"]
+            / (
+                (C["w_til_sq"] - C["qn_sq_vel_z_sq"])
+                * (C["w_til_sq"] - C["qm_sq_vel_z_sq"])
+            )
         )
 
     if e_exp_changed or m_changed or k_changed:
@@ -288,7 +288,7 @@ def update_arrays(p, cache):
         )
     if d_changed:
         # calcuate d
-        C["d"] = 1 - (p["P"] ** 2 * C["e_iwl"])
+        C["d"] = 1 / (1 - (p["P"] ** 2 * C["e_iwl_sq"]))
         C["d_P"] = p["P"] * C["d"]
         C["P_e_iwl"] = p["P"] * C["e_iwl"]
     C["last_p"] = p.copy()
@@ -365,17 +365,16 @@ def compute_functions(functions, p, cache, result_only=False):
         all_arrays["G"]["array"] = Gtilde
 
     if "A1" in functions or "H" in functions:
-        qn_sq_vel_z_sq = smul(qn**2, C["vel_z_sq"])
-        w_til_sq_m_qn_sq_vel_z_sq = C["w_til_sq"] - qn_sq_vel_z_sq
+        w_til_sq_m_qn_sq_vel_z_sq = C["w_til_sq"] - C["qn_sq_vel_z_sq"]
         A1_divisor1 = w_til_sq_m_qn_sq_vel_z_sq * C["w_til_sq_m_qm_sq_vel_z_sq"]
         A1_b = C["w_til_vel_z"] / w_til_sq_m_qn_sq_vel_z_sq
         At1b = mn_mul((n == m) * (Ln / 1j), C["A1_fac1"]) - mn_mul(
             symmetry, C["neg_m_e_iwl"]
         ) * A1_b * (C["A1_fac1"] + k_dot_v)
-
-        A1_c = 2 * C["w_bar_w_til_vel_z"] * C["A1_a"] / A1_divisor1
-        At1s1 = mn_mul(-symmetry, A1_c) * C["A1_fac2"]
-        e_iwl_n = smul((1 - (neg_1_n)), e_iwl)
+        At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (
+            2 * C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
+        )
+        e_iwl_n = 1 - smul(neg_1_n, e_iwl)
         e_iwl_n_fac5 = e_iwl_n * C["neg_m_e_iwl"]
         At1s2 = mn_mul(symmetry, e_iwl_n_fac5)
 
@@ -408,9 +407,7 @@ def compute_functions(functions, p, cache, result_only=False):
             fac1 * C["Hts1_a"] + fac2 * C["Hts1_b"] + fac3 * C["Hts1_c"]
         )
 
-        neg_1_m_m_e_iwl_n = mn_mul(
-            C["neg_1_m"], xp.stack([e_iwl_n[:, 0, ...]] * len(C["m"]), axis=0)
-        )
+        neg_1_m_m_e_iwl_n = mn_mul(C["neg_1_m"], e_iwl_n)
         Hts2 = symmetry_w_bar_w_til_vel_z * (
             fac1 * e_iwl_n_fac5
             - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"]
@@ -613,8 +610,9 @@ class CombinedResults(ResultsBase):
 
 
 class ResultsProcessor(ResultsStorage):
-    def __init__(self, functions, parameters, variable_params):
+    def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
         super().__init__(functions, parameters, variable_params)
+        self.dtype = dtype
         if not variable_params:
             raise ValueError("No variable parameters provided.")
         m_n_array_total = 1
@@ -648,12 +646,23 @@ class ResultsProcessor(ResultsStorage):
             index = []
             for j, _ in values:
                 index.append(j)
+            self.m_n_array_sizes[i] = m_n_size
             for function in functions:
-                self.m_n_array_sizes[i] = m_n_size
                 self.index_arrays[function][tuple(index)] = i
 
             self.iteration_total += m_n_size**2
         self.parameters["max_m_n_size"] = max_m_n_size
+
+    def reserve_memory(self):
+        # reserve array mem - so that memory errors are raised early
+        for function in self.functions:
+            for i, m_n_array in enumerate(self.m_n_arrays[function]):
+                if m_n_array is None:
+                    m_n_size = self.m_n_array_sizes[i]
+                    self.m_n_arrays[function][i] = arr = np.empty(
+                        (m_n_size, m_n_size), dtype=self.dtype
+                    )
+                    arr.fill(0)
 
     def get_tasks(self):
         f = next(iter(self.functions), None)
@@ -669,20 +678,26 @@ class ResultsProcessor(ResultsStorage):
         for f, arrs in self.m_n_arrays.items():
             for i, arr in enumerate(arrs):
                 if arr is not None:
-                    self.m_n_arrays[f][i] = arr.get()
+                    self.m_n_arrays[f][i] = ensure_numpy_array(arr)
         for f, arr in self.index_arrays.items():
-            self.index_arrays[f] = arr.get()
+            self.index_arrays[f] = ensure_numpy_array(arr)
 
     def add_m_n_array(self, function, i, array):
-        self.m_n_arrays[function][i] = array
+        self.m_n_arrays[function][i] = ensure_numpy_array(array)
 
     def add_m_n_arrays(self, i, arrays):
         for f, arr in zip(self.functions, arrays):
-            self.m_n_arrays[f][i] = arr
+            self.m_n_arrays[f][i] = ensure_numpy_array(arr)
+
+
+def ensure_numpy_array(arr):
+    if cp is not None and isinstance(arr, cp.ndarray):
+        return arr.get()
+    return arr
 
 
 def worker_calculate(
-    param_queue, result_queue, progress, functions, parameters, process_id=None
+    param_queue, result_queue, progress, functions, parameters, dtype, process_id=None
 ):
     """Worker process for multiprocessing.
 
@@ -716,7 +731,7 @@ def worker_calculate(
             params = parameters.copy()
             params.update(iteration_params)
             mn_arrays = [
-                xp.full([iteration_params["mn"]] * 2, -1, dtype=xp.complex128)
+                xp.full([iteration_params["mn"]] * 2, -1, dtype=dtype)
                 for _ in functions
             ]
             for chunk, arrays in process_chunks(params, functions, max_tile_size, C):
@@ -734,9 +749,10 @@ def worker_process(
     result_queue,
     progress,
     functions,
-    parameters,
+    args,
+    dtype=None,
     process_id=None,
-    gpu=False,
+    gpu_id=None,
 ):
     # import cProfile
     # cProfile.runctx(
@@ -745,16 +761,21 @@ def worker_process(
     #     locals(),
     #     f"debug\\prof\\prof{i+1}.prof",
     # )
-    if gpu:
+    if gpu_id is not None:
         import cupy as cp
 
         globals()["xp"] = cp
+        cp.cuda.Device(gpu_id).use()
+    if dtype is None:
+        dtype = xp.complex128
+    parameters, _ = get_parameters(args)
     worker_calculate(
         param_queue,
         result_queue,
         progress,
         functions,
         parameters,
+        dtype,
         process_id=process_id,
     )
 
@@ -775,6 +796,9 @@ def process_chunks(params, functions, chunk_size, cache):
 # @profile
 def main(args):
     """Main function."""
+    start_time = datetime.datetime.now()
+
+    gpus_to_use = []
     if args.gpu:
         if cp is None:
             raise RuntimeError(
@@ -783,38 +807,55 @@ def main(args):
             )
         else:
             globals()["xp"] = cp
-        if args.gpu_id is not None:
-            cp.cuda.Device(args.gpu_id).use()
-        gpu_id = cp.cuda.runtime.getDevice()
-        gpu_info = cp.cuda.runtime.getDeviceProperties(gpu_id)
-        print(
-            f"Using GPU {gpu_id}: '{gpu_info['name'].decode()}' with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
-        )
-
-    start_time = datetime.datetime.now()
-    params, variable_params = get_parameters(args)
-    if args.chunks is not None:
-        if args.chunk_parameter is None:
-            args.chunk_parameter = max(
-                variable_params.keys(), key=lambda p: len(variable_params[p])
+        if args.gpu_ids:
+            for gpu_id in args.gpu_ids:
+                gpus_to_use.append(gpu_id)
+        elif args.all_gpus:
+            gpus_to_use = list(range(cp.cuda.runtime.getDeviceCount()))
+        else:
+            gpus_to_use = [cp.cuda.runtime.getDevice()]
+            cp.cuda.Device(gpus_to_use[0]).use()
+        if not args.use_subprocesses and len(gpus_to_use) > 1:
+            print(
+                f"Found >1 GPUs ({len(gpus_to_use)} found) - forcing multiprocessing mode."
             )
-        if args.chunk_id is None:
-            raise ValueError("No chunk id specified.")
-        chunked_values = get_chunk(
-            variable_params[args.chunk_parameter], args.chunks, args.chunk_id
-        )
-        if chunked_values is None:
-            raise ValueError("Chunk {} has no values.".format(args.chunk_id))
-        print(
-            "Chunked values on axis {} [{}/{}]: {}".format(
-                args.chunk_parameter, args.chunk_id, args.chunks, chunked_values
+            args.use_subprocesses = True
+        if args.use_subprocesses:
+            mp.set_start_method("spawn")
+        if gpus_to_use:
+            print(f"Using {len(gpus_to_use)} GPU(s):")
+            for gpu_id in gpus_to_use:
+                gpu_info = cp.cuda.runtime.getDeviceProperties(gpu_id)
+                print(
+                    f"\tGPU {gpu_id}: {gpu_info['name'].decode()} "
+                    f"with {gpu_info['totalGlobalMem'] / 1e9:.2f} GB of memory."
+                )
+        else:
+            raise RuntimeError(
+                "No GPUs found! Please run without --gpu or check your "
+                "CUDA installation."
             )
-        )
-        variable_params[args.chunk_parameter] = chunked_values
+    dtype = getattr(np, f"complex{args.dtype}")
 
-    result_proc = ResultsProcessor(list(args.functions), params, variable_params)
+    params, variable_params = get_parameters(args, log=True)
+
+    result_proc = ResultsProcessor(
+        list(args.functions), params, variable_params, dtype=dtype
+    )
 
     iterations = result_proc.get_tasks()
+    expected_file_size = (
+        result_proc.iteration_total
+        * len(args.functions)
+        * xp.dtype(dtype).itemsize
+        / 1024
+        / 1024
+        / 1024
+    )
+    print(
+        f"Expected File Size: {expected_file_size:.1f} GB (Data Type: complex{args.dtype})"
+    )
+    result_proc.reserve_memory()
     progress_bar = tqdm(
         desc="Computing Functions",
         total=result_proc.iteration_total,
@@ -822,10 +863,11 @@ def main(args):
     )
     create_postfix = lambda d: ",".join("{}={:g}".format(k, v) for k, v in d.items())
     C = {}
-    if not params["use_multiprocessing"]:
+    if not args.use_subprocesses:
         max_tile_size = result_proc.parameters["max_tile_size"]
         for iteration_params in iterations:
             mn = iteration_params["mn"]
+            progress_bar.postfix = create_postfix(iteration_params)
             p = result_proc.parameters.copy()
             p.update(iteration_params)
             mn_arrays = [
@@ -841,22 +883,24 @@ def main(args):
                     arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
             result_proc.add_m_n_arrays(p["i"], mn_arrays)
 
-            progress_bar.postfix = create_postfix(iteration_params)
             p.update(iteration_params)
     else:
-        # Limit any multiprocessing within numpy
-        os.environ["OMP_NUM_THREADS"] = "1"
-        os.environ["MKL_NUM_THREADS"] = "1"
-        os.environ["OPENBLAS_NUM_THREADS"] = "1"
-        os.environ["OPENBLAS_MAIN_FREE"] = "1"
-        os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-        os.environ["NUMEXPR_NUM_THREADS"] = "1"
+        if args.gpu:
+            args.subprocess_count = args.subprocess_count or len(gpus_to_use)
+        else:
+            # Limit any multiprocessing within numpy
+            os.environ["OMP_NUM_THREADS"] = "1"
+            os.environ["MKL_NUM_THREADS"] = "1"
+            os.environ["OPENBLAS_NUM_THREADS"] = "1"
+            os.environ["OPENBLAS_MAIN_FREE"] = "1"
+            os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+            os.environ["NUMEXPR_NUM_THREADS"] = "1"
+            args.subprocess_count = args.subprocess_count or os.cpu_count()
 
-        process_count = params.get("subprocesses", os.cpu_count())
         batch_size = min(
             (
                 params.get("mp_batch_size", 1),
-                result_proc.iteration_total // process_count,
+                result_proc.iteration_total // args.subprocess_count,
             )
         )
         total_arrays = 0
@@ -865,15 +909,17 @@ def main(args):
 
         progress_bar.write(
             "Using multiprocessing, max workers: {} - Batch size: {} - Arrays to compute: {}".format(
-                process_count, batch_size, total_arrays
+                args.subprocess_count, batch_size, total_arrays
             )
         )
-        process_queue_size = process_count * 8
+        process_queue_size = args.subprocess_count * 8
         param_queue = mp.Queue(maxsize=process_queue_size)
         result_queue = mp.Queue(maxsize=process_queue_size)
         progress_values = []
         processes = []
-        for i in range(process_count):
+        for i, gpu_id in zip(
+            range(args.subprocess_count), itertools.cycle(gpus_to_use or [None])
+        ):
             progress_value = mp.Value("i", 0, lock=False)
             progress_values.append(progress_value)
             process = mp.Process(
@@ -883,19 +929,19 @@ def main(args):
                     result_queue,
                     progress_value,
                     result_proc.functions,
-                    params,
+                    args,
                 ),
-                kwargs={"process_id": i, "gpu": args.gpu},
+                kwargs={"process_id": i, "gpu_id": gpu_id, "dtype": dtype},
             )
             processes.append(process)
-        with ThreadPoolExecutor(max_workers=process_count) as executor:
+        with ThreadPoolExecutor(max_workers=args.subprocess_count) as executor:
             for process in processes:
                 executor.submit(process.start)
             executor.shutdown(wait=True)
         processing_time = datetime.datetime.now() - start_time
         progress_bar.write("--- Initialized processes: {} ---".format(processing_time))
         start_time = datetime.datetime.now()
-        postfix = {"CPUs": process_count}
+        postfix = {"Procs": args.subprocess_count}
         progress_bar.postfix = create_postfix(postfix)
 
         def queue_parameters(parameter_queue, iterations, batches, batch_size):
@@ -943,6 +989,7 @@ def main(args):
         result_proc.numpyify()
 
     results_dict = result_proc.as_dict()
+    results_dict["args"] = vars(args)
     processing_time = datetime.datetime.now() - start_time
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
@@ -964,18 +1011,17 @@ def main(args):
     return results_dict
 
 
-def get_parameters(args):
+def get_parameters(args, log=False):
     """Get parameters from command line arguments.
     Args:
         args (argparse.Namespace): Command line arguments.
+        log (bool): Whether to log the parameters.
+
     Returns:
         tuple[dict, dict]: Parameters and variable parameters.
     """
     params = PARAM_DEFAULTS.copy()
     variable_params = {}
-    params["use_multiprocessing"] = args.use_subprocesses
-    if args.max_subprocesses:
-        params["subprocesses"] = args.max_subprocesses
 
     # Override parameters with -p arguments
     for param, value in itertools.chain.from_iterable(args.params or ()):
@@ -999,7 +1045,6 @@ def get_parameters(args):
                 )
             )
         params[param] = value
-
     # Override variable parameters with -v arguments
     for param, values in itertools.chain.from_iterable(args.variable_params or ()):
         if (
@@ -1015,11 +1060,12 @@ def get_parameters(args):
             )
         variable_params[param] = values
 
-    print(
-        "Functions: {}\nParameters: {}\nVariable: {}".format(
-            args.functions, params, variable_params
+    if log:
+        print(
+            "Functions: {}\nParameters: {}\nVariable: {}".format(
+                args.functions, params, variable_params
+            )
         )
-    )
 
     # --- SET UP DEPENDENT PARAMETERS ---
     # Calculates theta and phi steps
@@ -1028,6 +1074,27 @@ def get_parameters(args):
     # Generates arrays for theta and phi based on the values previously defined
     params["theta_array"] = xp.linspace(0, params["theta_max"], params["steps"])
     params["phi_array"] = xp.linspace(0, params["phi_max"], params["steps"])
+
+    if args.chunks > 1:
+        if args.chunk_parameter is None:
+            args.chunk_parameter = max(
+                variable_params.keys(), key=lambda p: len(variable_params[p])
+            )
+        if args.chunk_id is None:
+            raise ValueError("No chunk id specified.")
+        chunked_values = get_chunk(
+            variable_params[args.chunk_parameter], args.chunks, args.chunk_id
+        )
+        if chunked_values is None:
+            raise ValueError("Chunk {} has no values.".format(args.chunk_id))
+        if log:
+            print(
+                "Chunked values on axis {} [{}/{}]: {}".format(
+                    args.chunk_parameter, args.chunk_id, args.chunks, chunked_values
+                )
+            )
+        variable_params[args.chunk_parameter] = chunked_values
+
     return params, variable_params
 
 
@@ -1119,8 +1186,14 @@ def get_parser():
         action="append",
         metavar="P=V1,V2,..,VN",
     )
+    inputs_group.add_argument(
+        "-d",
+        "--dtype",
+        choices=["64", "128", "256"],
+        default="128",
+        help="Complex data type to use for calculations.",
+    )
     mp_group = parser.add_argument_group("Processing")
-    # process_mode = mp_group.add_mutually_exclusive_group()
     mp_group.add_argument(
         "-x", "--use-subprocesses", action="store_true", help="Use subprocesses."
     )
@@ -1130,17 +1203,34 @@ def get_parser():
         action="store_true",
         help=("Use the GPU. Requires a CUDA-enabled GPU and CuPy to be installed."),
     )
-    mp_group.add_argument(
-        "--gpu-id",
-        action="store_true",
-        help=("GPU id. Default's to the first available gpu."),
+    gpu_mode_group = mp_group.add_mutually_exclusive_group()
+    gpu_mode_group.add_argument(
+        "-G",
+        "--gpu-ids",
+        type=int,
+        nargs="+",
+        help=(
+            "Id(s) of GPUs)s to use. Default's to the first available\n"
+            "cuda-capable gpu. Implies --gpu."
+        ),
+    )
+    gpu_mode_group.add_argument(
+        "-A",
+        "--all-gpus",
+        action="store_const",
+        const=-1,
+        help="Use all available GPUs. Implies --gpu.",
     )
     mp_group.add_argument(
         "-m",
-        "--max-subprocesses",
+        "--subprocess-count",
         type=int,
         default=None,
-        help="Use this many subprocesses. Defaults to the processor core count.",
+        help=(
+            "Use this many subprocesses. Defaults to the processor core\n"
+            "count, unless --gpu is specified, in which case it defaults to 1\n"
+            "per GPU in use."
+        ),
     )
     output_group = parser.add_argument_group("Output")
     output_group.add_argument(
@@ -1173,7 +1263,7 @@ def get_parser():
     )
     chunk_group = parser.add_argument_group("Chunking")
     chunk_group.add_argument(
-        "-C", "--chunks", type=int, default=None, help="Number of chunks."
+        "-C", "--chunks", type=int, default=1, help="Number of chunks."
     )
     chunk_group.add_argument(
         "-P",
@@ -1181,7 +1271,7 @@ def get_parser():
         type=str,
         default=None,
         help=(
-            "Parameter on which to chunk. Defaults to variable parameter with "
+            "Parameter on which to chunk. Defaults to variable parameter with\n"
             "the most values."
         ),
     )
@@ -1193,6 +1283,11 @@ def get_parser():
         help="Chunk id. (from 1 to --chunks)",
     )
     return parser
+
+
+def set_arg_defaults(args):
+    if args.all_gpus or args.gpu_ids:
+        args.gpu = True
 
 
 def get_chunk(array, chunks, chunk_id):
@@ -1250,4 +1345,5 @@ def tile_2d_arr(width, height, max_width, max_height):
 
 if __name__ == "__main__":
     arguments = get_parser().parse_args()
+    set_arg_defaults(arguments)
     main(arguments)

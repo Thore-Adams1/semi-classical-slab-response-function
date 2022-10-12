@@ -7,7 +7,7 @@ Add description of repo.
 Install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
 If intending to run on the gpu, [`CuPy`](https://cupy.dev/) and it's required dependencies must also be installed.
@@ -17,7 +17,22 @@ If intending to run on the gpu, [`CuPy`](https://cupy.dev/) and it's required de
 This code is all formatted using [`black`](https://pypi.org/project/black/). Automatic formatting can be set up as a git hook by running:
 
 ```bash
-git-scripts/install-git-hooks
+$ git-scripts/install-git-hooks
+```
+
+### Running tests
+
+To run some tests and compare against the original matlab logic, first set the following environment variables:
+
+- `$MATLAB_EXECUTABLE`: The path to the matlab executable on your machine.
+  Examples: `'/usr/local/bin/matlab'` or `'C:/Program Files/MATLAB/R2022a/bin/matlab.exe'`
+- `$MATLAB_SCRIPTS_PATH`: The path to directory containing the original logic for
+  this code. This directory must include `get_matelement.m` and dependent functions.
+  
+Then, to run the tests:
+
+```sh
+$ test/test_thesis_code_against_matlab.sh
 ```
 
 ## Running
@@ -117,7 +132,7 @@ Chunking:
 Testing was performed with the below command, suffixed with the additional arguments in the below table: 
 
 ```bash
-python thesis_code.py G H -v w=0:1.2:3 Kx=0.001:0.4:10 -p steps=150 L=50 tau=10 P=0 -w
+$ python thesis_code.py G H -v w=0:1.2:3 Kx=0.001:0.4:10 -p steps=150 L=50 tau=10 P=0 -w
 ```
 Testing with:
 - **System A**: i5-10600K / 32GB RAM / RTX 3080 (10GB VRAM)

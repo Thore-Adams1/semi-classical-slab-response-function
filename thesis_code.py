@@ -258,6 +258,15 @@ def update_arrays(p, cache):
         C["neg_m_e_iwl"] = 1 - smul(C["neg_1_m"], C["e_iwl"])
         C["At2s_fac1"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
         neg_1_m_e_iwl_cu_p_e_ewl = smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
+
+        C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
+        C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
+            C["neg_1_m"], C["e_iwl_m_e_kx_L"] * C["e_iwl_sq"]
+        )
+        C["Hts1_c"] = (C["e_iwl_cu_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
+            C["neg_1_m"], (C["e_iwl"] - C["e_iwl_sq_x_e_kx_L"])
+        )
+    if e_exp_changed or m_changed or n_changed:
         C["A1_fac2"] = (
             2
             * C["w_bar_w_til_vel_z"]
@@ -266,14 +275,6 @@ def update_arrays(p, cache):
                 (C["w_til_sq"] - C["qn_sq_vel_z_sq"])
                 * (C["w_til_sq"] - C["qm_sq_vel_z_sq"])
             )
-        )
-
-        C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
-        C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
-            C["neg_1_m"], C["e_iwl_m_e_kx_L"] * C["e_iwl_sq"]
-        )
-        C["Hts1_c"] = (C["e_iwl_cu_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
-            C["neg_1_m"], (C["e_iwl"] - C["e_iwl_sq_x_e_kx_L"])
         )
 
     if e_exp_changed or m_changed or k_changed:
@@ -370,7 +371,6 @@ def compute_functions(functions, p, cache, result_only=False):
         At1b = mn_mul((n == m) * (Ln / 1j), C["A1_fac1"]) - mn_mul(
             symmetry, C["neg_m_e_iwl"]
         ) * A1_b * (C["A1_fac1"] + k_dot_v)
-
         At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (
             2 * C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
         )

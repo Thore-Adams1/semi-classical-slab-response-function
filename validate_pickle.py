@@ -20,6 +20,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import scipy.io
 from tqdm import tqdm
+from textwrap import dedent
 
 from thesis_code import ResultsStorage, CombinedResults
 
@@ -53,8 +54,13 @@ def check_arrays_match(array_a, array_b, name="", tolerance=1e-9):
         msg = "not identical!"
         if tol:
             msg = f"diverge by a maximum of {tol:g} at index {tol_i}!"
+            logging.info(
+                "Values at max difference:\nA: %s\nB: %s",
+                array_a[tol_i],
+                array_b[tol_i],
+            )
         result = False
-    print("{}arrays {}".format(name + " " if name else "", msg))
+    logging.warning("{}arrays {}".format(name + " " if name else "", msg))
     return result
 
 
@@ -79,12 +85,15 @@ def run_matlab_script(matlab_script):
 
 def compare_results_with_matlab(results, temp_root=".validation"):
     ORIGINAL_LOGIC_PATH = os.environ["MATLAB_SCRIPTS_PATH"]
-    MATLAB_CODE_HEADER = f"""\
+    MATLAB_CODE_HEADER = dedent(
+        f"""\
     addpath {ORIGINAL_LOGIC_PATH}
     """
-    CREATE_M_N_ARRAY_MATLAB_CODE = """\
+    )
+    CREATE_M_N_ARRAY_MATLAB_CODE = dedent(
+        """\
     kvec = [{Kx},0];
-    wbar = {w_bar};
+    % wbar = {w_bar};
     p = {P};
     L = {L};
     dtheta = {d_theta};
@@ -112,10 +121,13 @@ def compare_results_with_matlab(results, temp_root=".validation"):
     save('{matrix_file_stem}.mat', 'A1_array','A2_array','G_array','H_array')
     display('Matlab script completed successfully!')
     """
+    )
 
     p = results.parameters
     p["N"] = p["theta_max"] / p["d_theta"]
-    arrays_to_compare = {f: [] for f in results.functions}
+    arrays_to_compare = {
+        f: [None] * results.param_combination_count() for f in results.functions
+    }
     if not os.path.exists(temp_root):  #
         os.mkdir(temp_root)
     temp_dir = tempfile.mkdtemp(prefix="results_", dir=temp_root)
@@ -130,7 +142,7 @@ def compare_results_with_matlab(results, temp_root=".validation"):
                 p[name] = value
                 param_strs.append(f"{name}={value:g}")
                 iteration_index.append(index)
-            param_text = ",".join(param_strs)
+            param_text = " ".join(param_strs)
             p["w_bar"] = p["w"] + (1j / p["tau"])
             p["omega"] = p["w"]
             iteration_arrays = [
@@ -154,7 +166,10 @@ def compare_results_with_matlab(results, temp_root=".validation"):
                 iteration_arrays,
                 p["matrix_file_stem"],
             )
-        pbar = tqdm(total=results.param_combination_count(), disable=True)
+        pbar = tqdm(
+            total=results.param_combination_count(),
+            disable=logging.getLogger().getEffectiveLevel() <= logging.DEBUG,
+        )
         for future in as_completed(matlab_futures):
             pbar.update(1)
             i, iteration_index, iteration_arrays, matrix_file_stem = matlab_futures[
@@ -162,12 +177,11 @@ def compare_results_with_matlab(results, temp_root=".validation"):
             ]
             mat = scipy.io.loadmat(f"{matrix_file_stem}.mat")
             for function, python_array in zip(arrays_to_compare, iteration_arrays):
-                arrays_to_compare[function].append(
-                    (
-                        mat["{}_array".format(function)],
-                        python_array,
-                    )
+                arrays_to_compare[function][i] = (
+                    python_array,
+                    mat["{}_array".format(function)],
                 )
+
         pbar.close()
     result = True
     for function in arrays_to_compare:
@@ -187,6 +201,13 @@ def compare_results_with_matlab(results, temp_root=".validation"):
 
 def main():
     args = get_parser().parse_args()
+    for i, log_level_name in enumerate(["ERROR", "WARNING", "INFO", "DEBUG"]):
+        if i == args.verbosity:
+            break
+    print(f"Log level: {log_level_name}")
+    log_level = getattr(logging, log_level_name)
+    logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
+
     if len(args.pickle_files) == 1:
         with open(args.pickle_files[0], "rb") as f:
             results = ResultsStorage.from_dict(pickle.load(f))
@@ -203,9 +224,10 @@ def main():
     print(f"Comparing results in {file_msg} with matlab code...")
     valid = compare_results_with_matlab(results)
     if valid:
-        print("Pickle file matches matlab results!")
+        print("\033[92mPickle file matches matlab results!\033[0m")
     else:
-        print("Pickle file does NOT match matlab results!")
+        print("\033[91mPickle file does NOT match matlab results!\033[0m")
+        exit(1)
 
 
 def get_parser():
@@ -219,6 +241,14 @@ def get_parser():
             "to combine them into a single results object."
         ),
         nargs="+",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Print more information",
+        action="count",
+        default=0,
+        dest="verbosity",
     )
     return parser
 

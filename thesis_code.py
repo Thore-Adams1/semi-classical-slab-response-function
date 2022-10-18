@@ -681,6 +681,8 @@ class ResultsProcessor(ResultsStorage):
                     self.m_n_arrays[f][i] = ensure_numpy_array(arr)
         for f, arr in self.index_arrays.items():
             self.index_arrays[f] = ensure_numpy_array(arr)
+        for k, v in self.parameters.items():
+            self.parameters[k] = ensure_numpy_array(v)
 
     def add_m_n_array(self, function, i, array):
         self.m_n_arrays[function][i] = ensure_numpy_array(array)
@@ -690,10 +692,11 @@ class ResultsProcessor(ResultsStorage):
             self.m_n_arrays[f][i] = ensure_numpy_array(arr)
 
 
-def ensure_numpy_array(arr):
-    if cp is not None and isinstance(arr, cp.ndarray):
-        return arr.get()
-    return arr
+def ensure_numpy_array(obj):
+    if cp is not None and isinstance(obj, cp.ndarray):
+        # get numpy array from cupy array
+        return obj.get()
+    return obj
 
 
 def worker_calculate(

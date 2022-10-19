@@ -326,7 +326,8 @@ def main(args):
     if not os.path.exists(figs_dir):
         os.makedirs(figs_dir)
 
-    plot(plots, plots["variable_params"], figs_dir)
+    if not args.skip_plotting:
+        plot(plots, plots["variable_params"], figs_dir)
 
 
 def get_parser():
@@ -363,9 +364,17 @@ def get_parser():
     parser.add_argument(
         "-f",
         "--figs-dir",
-        action="store_true",
         help="Directory in which to store figures. Defaults to a timestamped \n"
         r"'./figs/[DATE]_[TIME]' directory",
+    )
+    parser.add_argument(
+        "-k",
+        "--skip-plotting",
+        action="store_true",
+        help=(
+            "Skip plotting the figures. Useful if you just want to save the plots\n"
+            "to a plot pickle."
+        ),
     )
     return parser
 

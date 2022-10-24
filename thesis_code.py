@@ -1088,7 +1088,7 @@ def get_parameters(args, log=False):
         chunked_values = get_chunk(
             variable_params[args.chunk_parameter], args.chunks, args.chunk_id
         )
-        if chunked_values is None:
+        if not chunked_values:
             raise ValueError("Chunk {} has no values.".format(args.chunk_id))
         if log:
             print(

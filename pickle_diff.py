@@ -23,7 +23,7 @@ def check_arrays_match(array_a, array_b, name="", location=""):
 ARRAY_KEYS = {"m_n_arrays", "index_array"}
 
 
-def ensure_pickle_arrays_virtually_identical(pickle_path, other_pickle_path):
+def ensure_pickle_arrays_virtually_identical(pickle_path, other_pickle_path, arrays_only=True):
     import pickle
 
     with open(pickle_path, "rb") as fa:
@@ -40,35 +40,36 @@ def ensure_pickle_arrays_virtually_identical(pickle_path, other_pickle_path):
     with open(other_pickle_path, "rb") as fb:
         pickle_b = pickle.load(fb)
     result = True
-    assert (
-        pickle_a.keys() == pickle_b.keys()
-    ), "Keys are not identical: {} != {}".format(pickle_a.keys(), pickle_b.keys())
-    for key in pickle_a.keys():
-        if key in ARRAY_KEYS:
-            continue
-        elif key == "parameters":
-            params_a = pickle_a["parameters"]
-            params_b = pickle_b["parameters"]
-            assert (
-                params_a.keys() == params_b.keys()
-            ), "Param keys are not identical: {} != {}".format(
-                params_a.keys(), params_b.keys()
-            )
-            for param_key in params_a.keys():
-                value_a, value_b = params_a[param_key], params_b[param_key]
-                if isinstance(value_a, np.ndarray):
-                    result = result and check_arrays_match(
-                        value_a, value_b, name="parameter: {}".format(param_key)
-                    )
-                else:
-                    assert value_a == value_b, "parameter: {}: {} != {}".format(
-                        param_key, value_a, value_b
-                    )
-            if result:
-                print("[parameters]: identical")
-        else:
-            assert pickle_a[key] == pickle_b[key], f"{key} is not identical"
-            print(f"[{key}]: identical")
+    if not arrays_only:
+        assert (
+            pickle_a.keys() == pickle_b.keys()
+        ), "Keys are not identical: {} != {}".format(pickle_a.keys(), pickle_b.keys())
+        for key in pickle_a.keys():
+            if key in ARRAY_KEYS:
+                continue
+            elif key == "parameters":
+                params_a = pickle_a["parameters"]
+                params_b = pickle_b["parameters"]
+                assert (
+                    params_a.keys() == params_b.keys()
+                ), "Param keys are not identical: {} != {}".format(
+                    params_a.keys(), params_b.keys()
+                )
+                for param_key in params_a.keys():
+                    value_a, value_b = params_a[param_key], params_b[param_key]
+                    if isinstance(value_a, np.ndarray):
+                        result = result and check_arrays_match(
+                            value_a, value_b, name="parameter: {}".format(param_key)
+                        )
+                    else:
+                        assert value_a == value_b, "parameter: {}: {} != {}".format(
+                            param_key, value_a, value_b
+                        )
+                if result:
+                    print("[parameters]: identical")
+            else:
+                assert pickle_a[key] == pickle_b[key], f"{key} is not identical"
+                print(f"[{key}]: identical")
     for (k, o_arrays), (j, n_arrays) in zip(
         pickle_a["m_n_arrays"].items(), pickle_b["m_n_arrays"].items()
     ):
@@ -84,10 +85,10 @@ def ensure_pickle_arrays_virtually_identical(pickle_path, other_pickle_path):
                 )
                 and result
             )
-    for key in ARRAY_KEYS:
-        assert k == j, "Keys are not identical. pickle a: {}, pickle b: {}".format(
-            pickle_a[key].keys(), pickle_b[key].keys()
-        )
+        for key in ARRAY_KEYS:
+            assert k == j, "Keys are not identical. pickle a: {}, pickle b: {}".format(
+                pickle_a[key].keys(), pickle_b[key].keys()
+            )
     for (k, o_array), (j, n_array) in zip(
         pickle_a["index_arrays"].items(), pickle_a["index_arrays"].items()
     ):
@@ -109,5 +110,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "other_pickle_path", type=str, help="path to another pickle file"
     )
+    parser.add_argument(
+        "-A",
+        "--arrays-only",
+        action="store_true",
+        help="only check arrays, not parameters",
+    )
+
     args = parser.parse_args()
     ensure_pickle_arrays_virtually_identical(args.pickle_path, args.other_pickle_path)

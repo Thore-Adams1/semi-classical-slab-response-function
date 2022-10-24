@@ -700,7 +700,7 @@ def ensure_numpy_array(obj):
 
 
 def worker_calculate(
-    param_queue, result_queue, progress, functions, parameters, dtype, process_id=None
+    param_queue, result_queue, progress, functions, parameters, dtype, process_id=None, use_gpu=False
 ):
     """Worker process for multiprocessing.
 
@@ -741,6 +741,8 @@ def worker_calculate(
                 progress.value += (chunk[1] - chunk[0]) * (chunk[3] - chunk[2])
                 for i, arr in enumerate(mn_arrays):
                     arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
+            if use_gpu:
+                mn_arrays = [ensure_numpy_array(arr) for arr in mn_arrays]
             batch_results.append((params["i"], mn_arrays))
 
         if batch_results:
@@ -780,6 +782,7 @@ def worker_process(
         parameters,
         dtype,
         process_id=process_id,
+        use_gpu=gpu_id is not None,
     )
 
 

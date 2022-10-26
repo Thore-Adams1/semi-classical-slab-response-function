@@ -434,3 +434,65 @@ def ensure_numpy_array(obj):
         # get numpy array from cupy array
         return obj.get()
     return obj
+
+
+def get_epsilon_at_index(results, index):
+    G = results.get_m_n_array_from_index("G", index)
+    # A1 = results.get_m_n_array_from_index("A1", index)
+    # A2 = results.get_m_n_array_from_index("A2", index)
+    H = results.get_m_n_array_from_index("H", index)
+
+    tau = results.get_param_at_index("tau", index)
+    w_bar = results.get_param_at_index("w", index) + 1j / tau
+
+    H_plus = np.matrix(H[0::2, 0::2]).T
+    H_minus = np.matrix(H[1::2, 1::2]).T
+
+    G_plus = np.matrix(G[::2, ::2])
+    G_minus = np.matrix(G[1::2, 1::2])
+
+    # A = A1 + A2
+    # A_plus = A[0::2, 0::2]
+    # A_minus = A[1::2, 1::2]
+
+    """
+    Create required arrays from output arrays
+    """
+    Z_plus = np.ones([np.shape(H_plus)[0]])
+    Z_plus[0] = 1 / 2
+    Z_plus_matrix = np.matrix(Z_plus).T
+    Z_minus = np.ones([np.shape(H_plus)[0]])
+    Z_minus_matrix = np.matrix(Z_minus).T
+
+    G_vec_plus = np.matrix(G_plus[:, 0] * 2)
+    G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
+
+    Iden = np.identity(np.shape(H_plus)[0])
+
+    iden_w_sq = np.matrix(Iden * w_bar**2)
+
+    Hinvp = np.linalg.inv(iden_w_sq - H_plus)
+    Hinvm = np.linalg.inv(iden_w_sq - H_minus)
+
+    """
+    Calculate epsilon
+    """
+    epsp = (
+        1 - G_vec_plus.T * Hinvp * Z_plus_matrix
+    )  # The poles of this function give symmetric SPWs.
+    epsm = (
+        1 - G_vec_minus.T * Hinvm * Z_minus_matrix
+    )  # The poles of this function give anti-symmetric SPWs
+
+    sign_Hinvp, slog_Hinvp = np.linalg.slogdet(iden_w_sq - H_plus)
+    sign_Hinvm, slog_Hinvm = np.linalg.slogdet(iden_w_sq - H_minus)
+
+    Fp = sign_Hinvp * np.exp(slog_Hinvp)
+    Fm = sign_Hinvm * np.exp(slog_Hinvm)
+
+    return {
+        "epsp": epsp[0, 0],
+        "epsm": epsm[0, 0],
+        "Hinvp": 1 / (Fp),
+        "Hinvm": 1 / (Fm),
+    }

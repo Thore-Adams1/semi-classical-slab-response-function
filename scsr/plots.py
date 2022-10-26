@@ -18,7 +18,8 @@ from matplotlib import cm
 from numpy.linalg import inv, det
 
 # Local
-from scsr.results import ResultsStorage, CombinedResults
+from .results import ResultsStorage, CombinedResults
+from . import maths
 
 
 def write_plot(
@@ -174,64 +175,13 @@ def generate_plots(args):
             ax_v_v, ax_h_v = values[args.axes[0]], values[args.axes[1]]
             ax_v_i, ax_h_i = index[args.axes[0]], index[args.axes[1]]
 
-            G = results.get_m_n_array_from_index("G", full_index)
-            # A1 = results.get_m_n_array_from_index("A1", full_index)
-            # A2 = results.get_m_n_array_from_index("A2", full_index)
-            H = results.get_m_n_array_from_index("H", full_index)
+            eps = maths.get_epsilon_at_index(results, full_index)
 
-            tau = get_param("tau", axes_index)
-            w_bar = get_param("w", axes_index) + 1j / tau
+            epsp_map[ax_h_i, ax_v_i] = eps["epsp"]
+            epsm_map[ax_h_i, ax_v_i] = eps["epsm"]
 
-            H_plus = np.matrix(H[0::2, 0::2]).T
-            H_minus = np.matrix(H[1::2, 1::2]).T
-
-            G_plus = np.matrix(G[::2, ::2])
-            G_minus = np.matrix(G[1::2, 1::2])
-
-            # A = A1 + A2
-            # A_plus = A[0::2, 0::2]
-            # A_minus = A[1::2, 1::2]
-
-            """
-            Create required arrays from output arrays
-            """
-            Z_plus = np.ones([np.shape(H_plus)[0]])
-            Z_plus[0] = 1 / 2
-            Z_plus_matrix = np.matrix(Z_plus).T
-            Z_minus = np.ones([np.shape(H_plus)[0]])
-            Z_minus_matrix = np.matrix(Z_minus).T
-
-            G_vec_plus = np.matrix(G_plus[:, 0] * 2)
-            G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
-
-            Iden = np.identity(np.shape(H_plus)[0])
-
-            iden_w_sq = np.matrix(Iden * w_bar**2)
-
-            Hinvp = np.linalg.inv(iden_w_sq - H_plus)
-            Hinvm = np.linalg.inv(iden_w_sq - H_minus)
-
-            """
-            Calculate epsilon
-            """
-            epsp = (
-                1 - G_vec_plus.T * Hinvp * Z_plus_matrix
-            )  # The poles of this function give symmetric SPWs.
-            epsm = (
-                1 - G_vec_minus.T * Hinvm * Z_minus_matrix
-            )  # The poles of this function give anti-symmetric SPWs
-
-            sign_Hinvp, slog_Hinvp = np.linalg.slogdet(iden_w_sq - H_plus)
-            sign_Hinvm, slog_Hinvm = np.linalg.slogdet(iden_w_sq - H_minus)
-
-            Fp = sign_Hinvp * np.exp(slog_Hinvp)
-            Fm = sign_Hinvm * np.exp(slog_Hinvm)
-
-            epsp_map[ax_h_i, ax_v_i] = epsp[0, 0]
-            epsm_map[ax_h_i, ax_v_i] = epsm[0, 0]
-
-            Hinvp_map[ax_h_i, ax_v_i] = 1 / (Fp)
-            Hinvm_map[ax_h_i, ax_v_i] = 1 / (Fm)
+            Hinvp_map[ax_h_i, ax_v_i] = eps["Hinvp"]
+            Hinvm_map[ax_h_i, ax_v_i] = eps["Hinvm"]
 
         index_plots = {
             "epsp_map": epsp_map,

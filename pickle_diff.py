@@ -23,7 +23,9 @@ def check_arrays_match(array_a, array_b, name="", location=""):
 ARRAY_KEYS = {"m_n_arrays", "index_array"}
 
 
-def ensure_pickle_arrays_virtually_identical(pickle_path, other_pickle_path, arrays_only=True):
+def ensure_pickle_arrays_virtually_identical(
+    pickle_path, other_pickle_path, arrays_only=True
+):
     import pickle
 
     with open(pickle_path, "rb") as fa:

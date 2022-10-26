@@ -85,7 +85,14 @@ PARAM_DESCRIPTIONS = {
 
 
 def worker_calculate(
-    param_queue, result_queue, progress, functions, parameters, dtype, process_id=None, use_gpu=False
+    param_queue,
+    result_queue,
+    progress,
+    functions,
+    parameters,
+    dtype,
+    process_id=None,
+    use_gpu=False,
 ):
     """Worker process for multiprocessing.
 
@@ -256,9 +263,7 @@ def main(args):
                 maths.xp.full([mn] * 2, -1, dtype=maths.xp.complex128)
                 for _ in args.functions
             ]
-            for chunk, arrays in process_chunks(
-                p, args.functions, max_tile_size, C
-            ):
+            for chunk, arrays in process_chunks(p, args.functions, max_tile_size, C):
                 ms, me, ns, ne = chunk
                 progress_bar.update((me - ms) * (ne - ns))
                 for i, arr in enumerate(mn_arrays):

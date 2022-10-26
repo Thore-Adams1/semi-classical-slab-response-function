@@ -18,7 +18,7 @@ from matplotlib import cm
 from numpy.linalg import inv, det
 
 # Local
-from .results import ResultsStorage, CombinedResults
+from .results import ResultsStorage, CombinedResults, load_results
 from . import maths
 
 
@@ -69,21 +69,6 @@ def cartesian_product(*arrays, reshaped=True):
         return arr.reshape(-1, la)
     else:
         return arr
-
-
-def load_results(pickle_files):
-    if len(pickle_files) == 1:
-        print("Loading {}".format(pickle_files[0]))
-        with open(pickle_files[0], "rb") as f:
-            results = ResultsStorage.from_dict(pickle.load(f))
-    else:
-        all_results = []
-        for pickle_file in pickle_files:
-            with open(pickle_file, "rb") as f:
-                print("Loading {}".format(pickle_file))
-                all_results.append(ResultsStorage.from_dict(pickle.load(f)))
-        results = CombinedResults(all_results)
-    return results
 
 
 def generate_plots(args):

@@ -47,7 +47,7 @@ import numpy as np
 
 # Local
 from scsr import maths
-from scsr.results import ResultsProcessor
+from scsr.results import ResultsProcessor, EpsilonResultsProcessor, readable_filesize
 
 
 # Globals
@@ -224,21 +224,18 @@ def main(args):
 
     params, variable_params = get_parameters(args, log=True)
 
-    result_proc = ResultsProcessor(
+    if args.epsilon_only:
+        results_class = EpsilonResultsProcessor
+    else:
+        results_class = ResultsProcessor
+    result_proc = results_class(
         list(args.functions), params, variable_params, dtype=dtype
     )
 
     iterations = result_proc.get_tasks()
-    expected_file_size = (
-        result_proc.iteration_total
-        * len(args.functions)
-        * maths.xp.dtype(dtype).itemsize
-        / 1024
-        / 1024
-        / 1024
-    )
+    expected_file_size = readable_filesize(result_proc.reserve_memory())
     print(
-        f"Expected File Size: {expected_file_size:.1f} GB (Data Type: complex{args.dtype})"
+        f"Expected File Size: {expected_file_size} GB (Data Type: complex{args.dtype})"
     )
     result_proc.reserve_memory()
     progress_bar = tqdm(
@@ -257,10 +254,10 @@ def main(args):
             p.update(iteration_params)
             mn_arrays = [
                 maths.xp.full([mn] * 2, -1, dtype=maths.xp.complex128)
-                for _ in result_proc.functions
+                for _ in args.functions
             ]
             for chunk, arrays in process_chunks(
-                p, result_proc.functions, max_tile_size, C
+                p, args.functions, max_tile_size, C
             ):
                 ms, me, ns, ne = chunk
                 progress_bar.update((me - ms) * (ne - ns))
@@ -313,7 +310,7 @@ def main(args):
                     param_queue,
                     result_queue,
                     progress_value,
-                    result_proc.functions,
+                    args.functions,
                     args,
                 ),
                 kwargs={"process_id": i, "gpu_id": gpu_id, "dtype": dtype},
@@ -356,7 +353,7 @@ def main(args):
                 for i, mn_arrays in recieved:
                     complete_arrays += len(mn_arrays)
                     if mn_arrays:
-                        for name, array in zip(result_proc.functions, mn_arrays):
+                        for name, array in zip(args.functions, mn_arrays):
                             result_proc.m_n_arrays[name][i] = array
                 queue_parameters(param_queue, iterations, 1, batch_size)
                 progress_bar.postfix = create_postfix(postfix)
@@ -624,6 +621,12 @@ def get_parser():
         "--write",
         action="store_true",
         help="Write a pickle file with the resultant array.",
+    )
+    output_group.add_argument(
+        "-E",
+        "--epsilon-only",
+        action="store_true",
+        help="Only include epsilon values in the results.",
     )
     output_group.add_argument(
         "-o",

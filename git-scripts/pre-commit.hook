@@ -1,4 +1,4 @@
 #!/bin/sh
 repo_root=`git rev-parse --show-toplevel`
 which black > /dev/null || pip install black
-black $repo_root/*.py
+black $repo_root/*.py $repo_root/srsr

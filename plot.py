@@ -19,6 +19,7 @@ from numpy.linalg import inv, det
 
 # Local
 from scsr.plots import generate_plots, write_plots_from_plots_pickle
+
 """
 run:
 py plot.py --help 

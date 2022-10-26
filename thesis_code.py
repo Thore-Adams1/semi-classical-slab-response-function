@@ -50,10 +50,10 @@ from tqdm import tqdm
 import numpy as np
 import numpy as xp
 
-try:
-    import cupy as cp
-except ImportError:
-    cp = None
+# Local
+from scsr import maths
+from scsr.results import ResultsProcessor
+
 
 # Globals
 FUNCTIONS = {"A2", "A1", "G", "H"}
@@ -63,8 +63,8 @@ PARAM_DEFAULTS = {
     # "m_n_size": 2,
     "mp_batch_size": 1,
     # Calculates max values
-    "theta_max": 0.5 * xp.pi,
-    "phi_max": 2 * xp.pi,
+    "theta_max": 0.5 * maths.xp.pi,
+    "phi_max": 2 * maths.xp.pi,
     # Place holder
     "Nf_m": 1,
     "Vf": 1,
@@ -87,616 +87,6 @@ PARAM_DESCRIPTIONS = {
         "the main thread (No need to adjust)."
     ),
 }
-
-
-def values_differ(d1, d2, keys):
-    """Check if any of the values for the given keys differ between d1 & d2.
-
-
-        d1 (dict): Dictionary.
-
-        keys (iterable[str]): Keys to check.
-
-    Returns:
-        bool: True if values differ, False otherwise.
-    """
-    for key in keys:
-        if d1.get(key) != d2.get(key):
-            return True
-
-
-def op_across_axes(arr_a, arr_b, axes, op):
-    """Multiply two arrays along the given axes."""
-    return (op(arr_a, arr_b.transpose(axes))).transpose(np.argsort(axes))
-
-
-def stack_broadcast(arr_a, arr_b):
-    """
-    Given arr_a (with n dims) and arr_b (with m dims), return a new array with
-    n+m dims, with arr_b broadcast across on every new leading axis.
-    """
-    return xp.broadcast_to(arr_b, (*arr_a.shape, *arr_b.shape))
-
-
-def stack_op(arr_a, arr_b, op):
-    """
-    Given arr_a (with n dims) and arr_b (with m dims), return a new array with
-    n+m dims, where each axis is a combination of an arr_a value and an arr_b
-    value.
-    """
-    stacked_bcast = stack_broadcast(arr_a, arr_b)
-    l = list(range(stacked_bcast.ndim))
-    axes = l[arr_a.ndim :] + l[: arr_a.ndim]
-    return op_across_axes(arr_a, stacked_bcast, axes, op)
-
-
-def smul(arr_a, arr_b):
-    return stack_op(arr_a, arr_b, operator.mul)
-
-
-def sadd(arr_a, arr_b):
-    return stack_op(arr_a, arr_b, operator.add)
-
-
-def mul_axes(arr_a, arr_b, axes):
-    return op_across_axes(arr_a, arr_b, axes, operator.mul)
-
-
-def mn_mul(arr_a, arr_b):
-    l = list(range(arr_b.ndim))
-    axes = l[arr_a.ndim :] + l[: arr_a.ndim]
-    return op_across_axes(arr_a, arr_b, axes, operator.mul)
-
-
-def update_arrays(p, cache):
-    C = cache
-    last_p = C.get("last_p")
-    if not C:
-        C["vel"] = calc_velocity(p)
-        C["vel_z"] = C["vel"][..., 2]
-        C["vel_z_sq"] = C["vel_z"] ** 2
-        C["dth_x_dphi_x_Nf_m"] = p["d_theta"] * p["d_phi"] * p["Nf_m"]
-        C["theta_sins"] = xp.sin(p["theta_array"]).reshape([-1, 1])
-
-    m_changed = last_p is None or values_differ(p, last_p, ["mc"])
-    n_changed = last_p is None or values_differ(p, last_p, ["nc"])
-    L_changed = last_p is None or values_differ(p, last_p, ("L",))
-    ms, me = p["mc"]
-    ns, ne = p["nc"]
-    if m_changed:
-        C["m"] = xp.arange(ms, me).reshape(-1, 1)
-    if n_changed:
-        C["n"] = xp.arange(ns, ne).reshape(1, -1)
-    if m_changed or n_changed:
-        if n_changed or L_changed:
-            C["qn"] = C["n"] * xp.pi / p["L"]
-            C["Ln"] = p["L"] / (2 - (C["n"] == 0))
-            C["qn_sq_vel_z_sq"] = smul(C["qn"] ** 2, C["vel_z_sq"])
-        if m_changed or L_changed:
-            # x = xp.random.rand(1000,1000,1000)
-            # z = x.T
-            # z =
-            # z.T * xp.array([0,1])
-            C["qm"] = C["m"] * xp.pi / p["L"]
-            C["qm_vel_z"] = stack_op(C["qm"], C["vel_z"], operator.mul)
-            C["neg_1_m"] = (-1) ** C["m"]
-            C["1_m_neg_1_m"] = 1 - (-1) ** C["m"]
-
-    # m_changed = last_p is None or p["m"] != last_p["m"]
-    k_changed = last_p is None or values_differ(p, last_p, ("Kx", "Ky"))
-    w_til_changed = k_changed or values_differ(p, last_p, ("w", "tau"))
-    e_exp_changed = w_til_changed or values_differ(p, last_p, ("L",))
-    d_changed = e_exp_changed or values_differ(p, last_p, ("P",))
-    if k_changed:
-        C["K"] = xp.array([p["Kx"], p["Ky"]])
-        C["k_dot_v"] = xp.dot(C["vel"][..., :2], C["K"])
-        #
-        Kx_vel_z = p["Kx"] * C["vel_z"]
-        C["Kx_vel_z_1j"] = 1j * Kx_vel_z
-        C["k_dot_v_m_Kx_vel_z_1j"] = C["k_dot_v"] - C["Kx_vel_z_1j"]
-        C["k_dot_v_p_Kx_vel_z_1j"] = C["k_dot_v"] + C["Kx_vel_z_1j"]
-    if k_changed or m_changed:
-        C["k_dot_v_p_qm_vel_z"] = C["k_dot_v"] + C["qm_vel_z"]
-        C["k_dot_v_m_qm_vel_z"] = C["k_dot_v"] - C["qm_vel_z"]
-        # C["qm_sq_vel_z_sq"] = C["qm"] ** 2 * C["vel_z_sq"]
-        C["qm_sq_vel_z_sq"] = stack_op(C["qm"] ** 2, C["vel_z_sq"], operator.mul)
-    if w_til_changed:
-        # calculate omega tild
-        C["w_til"] = (
-            p["w"]
-            + (1j / p["tau"])
-            - (p["Kx"] * C["vel"][..., 0] + p["Ky"] * C["vel"][..., 1])
-        )
-        C["w_til_sq"] = C["w_til"] ** 2
-        C["w_til_vel_z"] = C["w_til"] * C["vel_z"]
-        C["w_bar_w_til_vel_z"] = p["w_bar"] * C["w_til_vel_z"]
-    if e_exp_changed:
-        C["e_kx_L"] = xp.exp(-p["Kx"] * p["L"])
-        C["e_exp"] = (1j * C["w_til"] * p["L"]) / (C["vel"][..., 2])
-        C["e_iwl"] = xp.exp(C["e_exp"])
-        C["e_iwl_sq"] = C["e_iwl"] ** 2
-        C["e_iwl_cu"] = C["e_iwl_sq"] * C["e_iwl"]
-        C["e_iwl_m_e_kx_L"] = C["e_iwl"] - C["e_kx_L"]
-        C["e_kx_L_m_e_iwl"] = -C["e_iwl_m_e_kx_L"]
-
-        C["e_iwl_x_e_kx_L"] = C["e_iwl"] * C["e_kx_L"]
-        C["e_iwl_sq_x_e_kx_L"] = C["e_iwl_sq"] * C["e_kx_L"]
-        C["e_iwl_cu_x_e_kx_L"] = C["e_iwl_cu"] * C["e_kx_L"]
-        C["e_iwl_cu_p_e_iwl"] = C["e_iwl_cu"] + C["e_iwl"]
-
-        C["Gts_arr_1"] = C["e_iwl_m_e_kx_L"] * C["e_iwl"]
-        C["Gts_arr_3"] = C["e_iwl_sq"] * C["e_kx_L"] - C["e_iwl"]
-        C["Gts_arr_4"] = 1 - C["e_iwl"] * C["e_kx_L"]
-    if w_til_changed or m_changed:
-        C["w_til_m_qm_vel_z"] = C["w_til"] - C["qm_vel_z"]
-        C["w_til_p_qm_vel_z"] = C["w_til"] + C["qm_vel_z"]
-        C["w_til_sq_m_qm_sq_vel_z_sq"] = C["w_til_sq"] - C["qm_sq_vel_z_sq"]
-    if w_til_changed or k_changed:
-        C["w_til_m_k_dot_v"] = C["w_til"] * C["k_dot_v"]
-        C["w_til_m_Kx_vel_z_1j"] = C["w_til"] - C["Kx_vel_z_1j"]
-        C["w_til_p_Kx_vel_z_1j"] = C["w_til"] + C["Kx_vel_z_1j"]
-        C["G_A"] = C["k_dot_v_p_Kx_vel_z_1j"] / C["w_til_m_Kx_vel_z_1j"]
-        C["G_B"] = C["k_dot_v_m_Kx_vel_z_1j"] / C["w_til_p_Kx_vel_z_1j"]
-        C["G_D"] = C["G_B"] - C["G_A"]
-
-        C["H_a"] = C["k_dot_v_p_Kx_vel_z_1j"] ** 2 / (C["w_til_m_Kx_vel_z_1j"])
-        C["H_b"] = ((C["k_dot_v_m_Kx_vel_z_1j"]) ** 2) / (C["w_til_p_Kx_vel_z_1j"])
-        C["H_c"] = C["H_a"] + C["H_b"]
-    if w_til_changed or k_changed or m_changed:
-        C["A1_a"] = C["w_til_m_k_dot_v"] + C["qm_sq_vel_z_sq"]
-        C["A1_fac1"] = (C["k_dot_v_p_qm_vel_z"]) ** 2 / (C["w_til_m_qm_vel_z"]) + (
-            C["k_dot_v_m_qm_vel_z"]
-        ) ** 2 / (C["w_til_p_qm_vel_z"])
-        C["A2_fac1"] = (
-            C["k_dot_v_p_qm_vel_z"] / C["w_til_m_qm_vel_z"]
-            + C["k_dot_v_m_qm_vel_z"] / C["w_til_p_qm_vel_z"]
-        )
-        C["G_C"] = C["G_A"] + smul(C["neg_1_m"] * C["e_kx_L"], C["G_B"])
-
-    if e_exp_changed or m_changed:
-        C["G_fac_4"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
-        C["neg_m_e_iwl"] = 1 - smul(C["neg_1_m"], C["e_iwl"])
-        C["At2s_fac1"] = 2 * C["e_iwl"] - smul(C["neg_1_m"], (C["e_iwl_sq"] + 1))
-        neg_1_m_e_iwl_cu_p_e_ewl = smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
-
-        C["Hts1_a"] = 2 * C["e_iwl_sq"] - neg_1_m_e_iwl_cu_p_e_ewl
-        C["Hts1_b"] = (C["e_iwl_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
-            C["neg_1_m"], C["e_iwl_m_e_kx_L"] * C["e_iwl_sq"]
-        )
-        C["Hts1_c"] = (C["e_iwl_cu_x_e_kx_L"] - C["e_iwl_sq"]) + smul(
-            C["neg_1_m"], (C["e_iwl"] - C["e_iwl_sq_x_e_kx_L"])
-        )
-    if e_exp_changed or m_changed or n_changed:
-        C["A1_fac2"] = (
-            2
-            * C["w_bar_w_til_vel_z"]
-            * C["A1_a"]
-            / (
-                (C["w_til_sq"] - C["qn_sq_vel_z_sq"])
-                * (C["w_til_sq"] - C["qm_sq_vel_z_sq"])
-            )
-        )
-
-    if e_exp_changed or m_changed or k_changed:
-        C["Phim0"] = 1 - C["neg_1_m"] * C["e_kx_L"]
-    if e_exp_changed or m_changed or k_changed or w_til_changed:
-        C["H_d"] = C["neg_m_e_iwl"] * (
-            C["A1_fac1"]
-            - C["H_a"]
-            - smul(C["neg_1_m"] * C["e_kx_L"], C["H_b"])
-            + smul(C["Phim0"], C["k_dot_v_m_Kx_vel_z_1j"])
-        )
-    if d_changed:
-        # calcuate d
-        C["d"] = 1 / (1 - (p["P"] ** 2 * C["e_iwl_sq"]))
-        C["d_P"] = p["P"] * C["d"]
-        C["P_e_iwl"] = p["P"] * C["e_iwl"]
-    C["last_p"] = p.copy()
-
-
-# @profile
-def compute_functions(functions, p, cache, result_only=False):
-    """Compute a function. MORE DETAIL COULD HELP - MAYBE A BETTER NAME?
-    - Calculates each function as a function of Vf, theta and phi
-    - Perfoms the integral by multiplying by sin(theta)
-    Args:
-        functions (list[str]): Functions to compute. Can include ("H", "A1", "A2", "G").
-        p (dict[str:object]): parameters used for calculations.
-        C (dict[str:xp.ndarray]): Arrays used for calculations.
-    Returns:
-        dict[str:dict[str:xp.ndarray]]: Arrays of the functions in the format:
-            {
-                FUNCTION_NAME: {
-                    "array": xp.ndarray[theta*phi],
-                    "integral": xp.ndarray[theta*phi],
-                },
-                ...
-            }
-    """
-    # return {f: {"result":0} for f in functions}
-    w_bar = p["w_bar"]
-    update_arrays(p, cache)
-    C = cache
-    P, L, Ln, Kx, wp, Vf = (
-        p["P"],
-        p["L"],
-        C["Ln"],
-        p["Kx"],
-        p["wp"],
-        p["Vf"],
-    )
-
-    all_arrays = {Kx: {} for Kx in functions}
-    m, qm, n, qn = C["m"], C["qm"], C["n"], C["qn"]
-    e_iwl = C["e_iwl"]
-    k_dot_v = C["k_dot_v"]
-    vel_z = C["vel_z"]
-    neg_1_n = (-1) ** n
-
-    if "G" in functions or "A2" in functions or "A1" in functions or "H" in functions:
-        Ln = L / (2 - (n == 0))
-        symmetry = (1 + (-1) ** (m + n)) / 2
-        symmetry_vel_z = smul(symmetry, vel_z)
-        A2_fac2 = symmetry_vel_z * C["A2_fac1"]
-        At2b = C["neg_m_e_iwl"] * A2_fac2
-        At2s = C["At2s_fac1"] * A2_fac2
-        Atilde2 = At2b + At2s * ((sadd(neg_1_n, C["P_e_iwl"]) * (C["d_P"])))
-        all_arrays["A2"] = {}
-        all_arrays["A2"]["array"] = Atilde2
-
-    if "G" in functions:
-        fac2 = symmetry_vel_z * C["G_C"]
-        fac3 = symmetry_vel_z * C["G_D"]
-
-        Gtb = (A2_fac2 - fac2) * C["neg_m_e_iwl"] - mn_mul(
-            (1 - C["neg_1_m"] * C["e_kx_L"]), fac3
-        )
-
-        Gts = (
-            A2_fac2 * C["G_fac_4"]
-            + (
-                C["G_A"] * (C["e_kx_L_m_e_iwl"] + smul(neg_1_n, C["Gts_arr_1"]))
-                + C["G_B"] * (C["Gts_arr_3"] + smul(neg_1_n, C["Gts_arr_4"]))
-            )
-            * symmetry_vel_z
-        )
-
-        Gtilde = Gtb + Gts * ((C["d_P"]) * sadd(neg_1_n, C["P_e_iwl"]))
-        all_arrays["G"]["array"] = Gtilde
-
-    if "A1" in functions or "H" in functions:
-        w_til_sq_m_qn_sq_vel_z_sq = C["w_til_sq"] - C["qn_sq_vel_z_sq"]
-        A1_divisor1 = w_til_sq_m_qn_sq_vel_z_sq * C["w_til_sq_m_qm_sq_vel_z_sq"]
-        A1_b = C["w_til_vel_z"] / w_til_sq_m_qn_sq_vel_z_sq
-        At1b = mn_mul((n == m) * (Ln / 1j), C["A1_fac1"]) - mn_mul(
-            symmetry, C["neg_m_e_iwl"]
-        ) * A1_b * (C["A1_fac1"] + k_dot_v)
-        At1s1 = mn_mul(-symmetry, C["A1_fac2"]) * (
-            2 * C["e_iwl_sq"] - smul(C["neg_1_m"], C["e_iwl_cu_p_e_iwl"])
-        )
-        e_iwl_n = 1 - smul(neg_1_n, e_iwl)
-        e_iwl_n_fac5 = e_iwl_n * C["neg_m_e_iwl"]
-        At1s2 = mn_mul(symmetry, e_iwl_n_fac5)
-
-        Atilde1 = At1b + (C["d_P"]) * (P * At1s1 + At1s2)
-
-        all_arrays["A1"] = {}
-        all_arrays["A1"]["array"] = Atilde1
-
-    if "H" in functions:
-        H_c = C["H_c"]
-        H_d = C["H_d"]
-
-        Htb = (
-            mn_mul((n == m) * (Ln / 1j), C["A1_fac1"])
-            - mn_mul(symmetry, A1_b) * H_d
-            + smul(symmetry * (1j * Kx * C["Phim0"] / (Kx**2 + qn**2)), H_c)
-        )
-
-        fac1 = 2 * C["A1_a"] / A1_divisor1
-
-        fac2 = C["k_dot_v_p_Kx_vel_z_1j"] / (
-            w_til_sq_m_qn_sq_vel_z_sq * C["w_til_m_Kx_vel_z_1j"]
-        )
-
-        fac3 = (C["k_dot_v_m_Kx_vel_z_1j"]) / (
-            w_til_sq_m_qn_sq_vel_z_sq * C["w_til_p_Kx_vel_z_1j"]
-        )
-        symmetry_w_bar_w_til_vel_z = smul(symmetry, C["w_bar_w_til_vel_z"])
-        Hts1 = -symmetry_w_bar_w_til_vel_z * (
-            fac1 * C["Hts1_a"] + fac2 * C["Hts1_b"] + fac3 * C["Hts1_c"]
-        )
-
-        neg_1_m_m_e_iwl_n = mn_mul(C["neg_1_m"], e_iwl_n)
-        Hts2 = symmetry_w_bar_w_til_vel_z * (
-            fac1 * e_iwl_n_fac5
-            - neg_1_m_m_e_iwl_n * fac2 * C["e_kx_L_m_e_iwl"]
-            - fac3 * e_iwl_n * (1 - C["e_iwl_x_e_kx_L"])
-        )
-
-        Htilde = Htb + C["d_P"] * (P * Hts1 + Hts2)
-
-        all_arrays["H"] = {}
-        all_arrays["H"]["array"] = Htilde
-
-    # calculate the phi*theta integrals for each of the functions
-    fA = (1j * w_bar / Ln) * (wp / Vf) ** 2 * (3 / (4 * xp.pi) ** 2)
-    fGH = fA * 4 * xp.pi / (Kx * Kx + qm**2)
-    for func_name, func_arrays in all_arrays.items():
-        func_arrays["integral"] = func_arrays["array"] * C["theta_sins"]
-        func_arrays["result"] = (
-            xp.sum(func_arrays["integral"], axis=(2, 3)) * C["dth_x_dphi_x_Nf_m"]
-        )
-        if func_name in ("G", "H"):
-            func_arrays["result"] *= fGH
-        else:
-            func_arrays["result"] *= fA
-        # func_arrays["result"] = complex(func_arrays["result"])
-        if result_only:
-            # Clear some memory if these aren't needed
-            del func_arrays["array"]
-            del func_arrays["integral"]
-    return all_arrays
-
-
-def calc_velocity(p):
-    """Get velocity in x, y and z.
-
-    Args:
-        params (float): parameters.
-
-    Returns:
-        xp.ndarray[theta*phi*3]: x, y and z velocity.
-    """
-    sin_theta_array = xp.sin(p["theta_array"])[:, xp.newaxis]
-    velocity = xp.full((len(p["theta_array"]), len(p["phi_array"]), 3), float(p["Vf"]))
-    velocity[..., 0] *= xp.cos(p["phi_array"]) * sin_theta_array
-    velocity[..., 1] *= xp.sin(p["phi_array"]) * sin_theta_array
-    velocity[..., 2] *= xp.cos(p["theta_array"])[:, xp.newaxis]
-    return velocity
-
-
-class ResultsBase:
-    def __init__(self):
-        self.parameters = {}
-        self.variable_params = {}
-
-    def parameter_combinations(self):
-        # --- LOOP OVER CARTESIAN PRODUCT OF VARIABLE PARAMETERS ---
-        enumerated_values = (
-            enumerate(values) for values in self.variable_params.values()
-        )
-        return itertools.product(*enumerated_values)
-
-    def param_combination_count(self):
-        m_n_array_total = 1
-        for v in self.variable_params.values():
-            m_n_array_total *= len(v)
-        return m_n_array_total
-
-
-class ResultsStorage(ResultsBase):
-    def __init__(self, functions, parameters, variable_params):
-        super().__init__()
-        self.functions = functions
-        self.parameters = parameters
-        self.variable_params = variable_params
-        self.m_n_arrays = []
-        self.index_arrays = {}
-        self.processing_time = 0
-
-    def as_dict(self, **kwargs):
-        kwargs.update(
-            {
-                "functions": self.functions,
-                "parameters": self.parameters,
-                "variable_params": self.variable_params,
-                "m_n_arrays": self.m_n_arrays,
-                "index_arrays": self.index_arrays,
-            }
-        )
-        return kwargs
-
-    def get_m_n_array_from_values(self, function, iteration_params):
-        index = []
-        for k, v in iteration_params.items():
-            index.append(self.variable_params[k].index(v))
-        index = tuple(index)
-        return self.m_n_arrays[function][self.index_arrays[function][index]]
-
-    def get_m_n_array_from_index(self, function, index):
-        return self.m_n_arrays[function][self.index_arrays[function][tuple(index)]]
-
-    @classmethod
-    def from_dict(cls, dictionary):
-        instance = cls(
-            dictionary["functions"],
-            dictionary["parameters"],
-            dictionary["variable_params"],
-        )
-        instance.m_n_arrays = dictionary["m_n_arrays"]
-        instance.index_arrays = dictionary["index_arrays"]
-        return instance
-
-
-class CombinedResults(ResultsBase):
-    """Combine the results of a set of runs.
-
-    Args:
-        results (list[ResultsStorage]): list of results.
-    """
-
-    def __init__(self, results):
-        super().__init__()
-        results = list(results)
-        self.variable_params = defaultdict(list)
-        self.chunked_param = None
-        if len(results) < 2:
-            raise ValueError(
-                "No or only one result provided. Just use ResultsStorage "
-                "directly - cba to test this case"
-            )
-        self.parameters = results[0].parameters
-        self.functions = results[0].functions
-        valid_variable_params = set(results[0].variable_params)
-        self.chunk_ends_to_result = {}
-        result_chunk_maxes = []
-        for i, result in enumerate(results):
-            if i == 0:
-                for param_name, values in result.variable_params.items():
-                    self.variable_params[param_name].extend(values)
-                continue
-            else:
-                if set(result.variable_params) != valid_variable_params:
-                    raise ValueError("Results must have the same variable parameters.")
-            for param_name, values in result.variable_params.items():
-                if values != results[0].variable_params[param_name]:
-                    if self.chunked_param is None:
-                        self.chunked_param = param_name
-                    else:
-                        if self.chunked_param != param_name:
-                            raise ValueError("Cannot parse chunks on multiple axes.")
-            if self.chunked_param is None:
-                raise ValueError("No chunked parameters found.")
-
-        self.variable_params[self.chunked_param] = []
-        for result in results:
-            values = result.variable_params[self.chunked_param]
-            result_chunk_maxes.append((max(values), result))
-            self.variable_params[self.chunked_param].extend(values)
-
-        for k, v in self.variable_params.items():
-            self.variable_params[k] = sorted(v)
-        self.ordered_chunk_ends = []
-        self.results = []
-        for chunk_max, result in sorted(result_chunk_maxes, key=lambda x: x[0]):
-            self.ordered_chunk_ends.append(chunk_max)
-            self.results.append(result)
-
-    def _get_chunked_index(self, index):
-        value = self.variable_params[self.chunked_param][index]
-        chunk_end_index = bisect_left(self.ordered_chunk_ends, value)
-        mapped_result = self.results[chunk_end_index]
-        return mapped_result, mapped_result.variable_params[self.chunked_param].index(
-            value
-        )
-
-    def get_m_n_array_from_values(self, function, values):
-        mapped_index = []
-        mapped_result = None
-        for v, value in zip(self.variable_params, values):
-            i = self.variable_params[v].index(value)
-            if v == self.chunked_param:
-                mapped_result, mapped_partial_index = self._get_chunked_index(i)
-                mapped_index.append(mapped_partial_index)
-            else:
-                mapped_index.append(i)
-        if mapped_result is None:
-            raise ValueError("No result found for values {}".format(values))
-        return mapped_result.get_m_n_array_from_index(function, tuple(mapped_index))
-
-    def get_m_n_array_from_index(self, function, index):
-        mapped_index = []
-        mapped_result = None
-        for v, i in zip(self.variable_params, index):
-            if v == self.chunked_param:
-                mapped_result, mapped_partial_index = self._get_chunked_index(i)
-                mapped_index.append(mapped_partial_index)
-            else:
-                mapped_index.append(i)
-        if mapped_result is None:
-            raise ValueError("No result found for index {}".format(index))
-        return mapped_result.get_m_n_array_from_index(function, tuple(mapped_index))
-
-
-class ResultsProcessor(ResultsStorage):
-    def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
-        super().__init__(functions, parameters, variable_params)
-        self.dtype = dtype
-        if not variable_params:
-            raise ValueError("No variable parameters provided.")
-        m_n_array_total = 1
-        for v in variable_params.values():
-            m_n_array_total *= len(v)
-        self.m_n_arrays = {f: [None] * m_n_array_total for f in functions}
-        self.m_n_array_sizes = [None] * m_n_array_total
-        self.index_arrays = {k: {} for k in functions}
-        assert variable_params, "No variable parameters specified!"
-        param_axes = [len(v) for v in variable_params.values()]
-        for array_name in functions:
-            self.index_arrays[array_name] = index_array = xp.empty(
-                param_axes, dtype=int
-            )
-            index_array[:] = -1
-
-        # --- SET UP INTEGRAL ARRAYS (m*n) ---
-        self.iteration_total = 0
-        given_lc = self.parameters.get("lc")
-        max_m_n_size = 1
-        for i, values in enumerate(self.parameter_combinations()):
-            iteration_params = {k: v for k, (_, v) in zip(self.variable_params, values)}
-            p = self.parameters.copy()
-            p.update(iteration_params)
-            if given_lc is None:
-                lc = 10 * p["Kx"] * p["L"] / (2 * xp.pi)
-                m_n_size = 2 * int(xp.ceil(lc))
-            else:
-                m_n_size = 2 * int(xp.ceil(given_lc))
-            max_m_n_size = max(max_m_n_size, m_n_size)
-            index = []
-            for j, _ in values:
-                index.append(j)
-            self.m_n_array_sizes[i] = m_n_size
-            for function in functions:
-                self.index_arrays[function][tuple(index)] = i
-
-            self.iteration_total += m_n_size**2
-        self.parameters["max_m_n_size"] = max_m_n_size
-
-    def reserve_memory(self):
-        # reserve array mem - so that memory errors are raised early
-        for function in self.functions:
-            for i, m_n_array in enumerate(self.m_n_arrays[function]):
-                if m_n_array is None:
-                    m_n_size = self.m_n_array_sizes[i]
-                    self.m_n_arrays[function][i] = arr = np.empty(
-                        (m_n_size, m_n_size), dtype=self.dtype
-                    )
-                    arr.fill(0)
-
-    def get_tasks(self):
-        f = next(iter(self.functions), None)
-        for i, values in enumerate(self.parameter_combinations()):
-            # A unique combination of variable parameters.
-            iteration_params = {k: v for k, (_, v) in zip(self.variable_params, values)}
-            iteration_params["i"] = i
-            m_max = n_max = self.m_n_array_sizes[i]
-            iteration_params["mn"] = m_max  # , n_max
-            yield iteration_params
-
-    def numpyify(self):
-        for f, arrs in self.m_n_arrays.items():
-            for i, arr in enumerate(arrs):
-                if arr is not None:
-                    self.m_n_arrays[f][i] = ensure_numpy_array(arr)
-        for f, arr in self.index_arrays.items():
-            self.index_arrays[f] = ensure_numpy_array(arr)
-        for k, v in self.parameters.items():
-            self.parameters[k] = ensure_numpy_array(v)
-
-    def add_m_n_array(self, function, i, array):
-        self.m_n_arrays[function][i] = ensure_numpy_array(array)
-
-    def add_m_n_arrays(self, i, arrays):
-        for f, arr in zip(self.functions, arrays):
-            self.m_n_arrays[f][i] = ensure_numpy_array(arr)
-
-
-def ensure_numpy_array(obj):
-    if cp is not None and isinstance(obj, cp.ndarray):
-        # get numpy array from cupy array
-        return obj.get()
-    return obj
 
 
 def worker_calculate(
@@ -734,7 +124,7 @@ def worker_calculate(
             params = parameters.copy()
             params.update(iteration_params)
             mn_arrays = [
-                xp.full([iteration_params["mn"]] * 2, -1, dtype=dtype)
+                maths.xp.full([iteration_params["mn"]] * 2, -1, dtype=dtype)
                 for _ in functions
             ]
             for chunk, arrays in process_chunks(params, functions, max_tile_size, C):
@@ -742,7 +132,7 @@ def worker_calculate(
                 for i, arr in enumerate(mn_arrays):
                     arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
             if use_gpu:
-                mn_arrays = [ensure_numpy_array(arr) for arr in mn_arrays]
+                mn_arrays = [maths.ensure_numpy_array(arr) for arr in mn_arrays]
             batch_results.append((params["i"], mn_arrays))
 
         if batch_results:
@@ -767,12 +157,10 @@ def worker_process(
     #     f"debug\\prof\\prof{i+1}.prof",
     # )
     if gpu_id is not None:
-        import cupy as cp
-
-        globals()["xp"] = cp
-        cp.cuda.Device(gpu_id).use()
+        maths.set_gpu_mode(True)
+        maths.cp.cuda.Device(gpu_id).use()
     if dtype is None:
-        dtype = xp.complex128
+        dtype = maths.xp.complex128
     parameters, _ = get_parameters(args)
     worker_calculate(
         param_queue,
@@ -794,7 +182,7 @@ def process_chunks(params, functions, chunk_size, cache):
         ms, me, ns, ne = chunk
         p["mc"] = ms, me
         p["nc"] = ns, ne
-        chunk_result = compute_functions(functions, p, cache, result_only=True)
+        chunk_result = maths.compute_functions(functions, p, cache, result_only=True)
         arrs = [chunk_result[f]["result"] for f in functions]
         yield (ms, me, ns, ne), arrs
 
@@ -806,13 +194,9 @@ def main(args):
 
     gpus_to_use = []
     if args.gpu:
-        if cp is None:
-            raise RuntimeError(
-                "Couldn't import CuPy. Required for GPU.\n"
-                "See: https://docs.cupy.dev/en/stable/install.html"
-            )
-        else:
-            globals()["xp"] = cp
+        maths.set_gpu_mode(True)
+        import cupy as cp
+
         if args.gpu_ids:
             for gpu_id in args.gpu_ids:
                 gpus_to_use.append(gpu_id)
@@ -853,7 +237,7 @@ def main(args):
     expected_file_size = (
         result_proc.iteration_total
         * len(args.functions)
-        * xp.dtype(dtype).itemsize
+        * maths.xp.dtype(dtype).itemsize
         / 1024
         / 1024
         / 1024
@@ -877,7 +261,7 @@ def main(args):
             p = result_proc.parameters.copy()
             p.update(iteration_params)
             mn_arrays = [
-                xp.full([mn] * 2, -1, dtype=xp.complex128)
+                maths.xp.full([mn] * 2, -1, dtype=maths.xp.complex128)
                 for _ in result_proc.functions
             ]
             for chunk, arrays in process_chunks(
@@ -996,8 +380,8 @@ def main(args):
 
     results_dict = result_proc.as_dict()
     results_dict["args"] = vars(args)
-    results_dict["details"] = {"runtime": processing_time}
     processing_time = datetime.datetime.now() - start_time
+    results_dict["details"] = {"runtime": processing_time}
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
         output_path = args.output or "results/output.pkl"
@@ -1079,8 +463,8 @@ def get_parameters(args, log=False):
     params["d_theta"] = params["theta_max"] / (params["steps"] - 1)
     params["d_phi"] = params["phi_max"] / (params["steps"] - 1)
     # Generates arrays for theta and phi based on the values previously defined
-    params["theta_array"] = xp.linspace(0, params["theta_max"], params["steps"])
-    params["phi_array"] = xp.linspace(0, params["phi_max"], params["steps"])
+    params["theta_array"] = maths.xp.linspace(0, params["theta_max"], params["steps"])
+    params["phi_array"] = maths.xp.linspace(0, params["phi_max"], params["steps"])
 
     if args.chunks > 1:
         if args.chunk_parameter is None:
@@ -1138,9 +522,9 @@ def variable_param_type(string):
                     "{!r}. No steps specified.".format(param, value)
                 )
             else:
-                all_values.extend(xp.linspace(start, end, 1 + end - start))
+                all_values.extend(maths.xp.linspace(start, end, 1 + end - start))
         else:
-            all_values.extend(xp.linspace(start, end, steps))
+            all_values.extend(maths.xp.linspace(start, end, steps))
     return param, all_values
 
 

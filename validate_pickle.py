@@ -7,6 +7,7 @@ Note: The following two environment variables must be set:
   this code. This directory must include get_matelement.m and dependent functions.
 
 """
+# Standard
 import pipes
 import os
 import argparse
@@ -17,12 +18,14 @@ import shlex
 import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Third Party
 import numpy as np
 import scipy.io
 from tqdm import tqdm
 from textwrap import dedent
 
-from thesis_code import ResultsStorage, CombinedResults
+# Local
+from scsr.results import ResultsStorage, CombinedResults
 
 
 def read_array_from_csv(file_path):

@@ -32,6 +32,7 @@ module load python/3.7.0
 {gpu_commands}
 echo "RUNNING CODE:"
 {command}"""
+sys.path.append(os.path.dirname(__file__))
 import thesis_code as tc
 
 
@@ -44,7 +45,7 @@ def get_unique_dir(pattern, start=1):
 
 
 def get_commands(args, tc_args, given_args, pickles_dir):
-    commands = []
+    commands = ["cd " + pipes.quote(os.path.dirname(tc.__file__))]
     if args.create_job_script:
         chunk_range = ["$SLURM_ARRAY_TASK_ID"]
     else:
@@ -69,6 +70,7 @@ def get_commands(args, tc_args, given_args, pickles_dir):
                 str(chunk),
             ]
         )
+        commands.append()
         command_parts = [
             "python3",
             tc.__file__,
@@ -151,7 +153,7 @@ def main():
             f.write(
                 jobscript.format(
                     name=var_str,
-                    command=commands[0],
+                    command="\n".join(commands),
                     gpu_sbatch=gpu_sbatch,
                     gpu_commands=gpu_commands,
                     chunks_sbatch=chunks_config,

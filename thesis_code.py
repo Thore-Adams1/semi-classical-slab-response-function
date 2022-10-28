@@ -241,9 +241,7 @@ def main(args):
 
     iterations = result_proc.get_tasks()
     expected_file_size = readable_filesize(result_proc.reserve_memory())
-    print(
-        f"Expected File Size: {expected_file_size} GB (Data Type: complex{args.dtype})"
-    )
+    print(f"Expected File Size: {expected_file_size} (Data Type: complex{args.dtype})")
     result_proc.reserve_memory()
     progress_bar = tqdm(
         desc="Computing Functions",

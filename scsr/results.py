@@ -20,24 +20,34 @@ class PickleType(Enum):
     # Contains n-dimensional plot of epsilon + associated values
     EPSILON_VALUES = 1
     # Contains 2d plot data
-    EPSILON_PLOTS = 1
+    EPSILON_PLOTS = 2
 
 
 class ResultsBase:
     def __init__(self, parameters, variable_params):
         self.parameters = dict(parameters)
         self.variable_params = dict(variable_params)
-        self._variable_param_indices = {k: i for i,k in enumerate(variable_params)}
+        self.pickle_paths = []
+        self.variable_param_indices = {k: i for i, k in enumerate(variable_params)}
         self.index_shape = tuple(len(v) for v in self.variable_params.values())
 
     def as_dict(self, **kwargs):
-        kwargs.update(
+        dictionary = self._get_results_dict()
+        dictionary.update(
             {
+                "pickle_type": self.get_pickle_type(),
                 "parameters": self.parameters,
                 "variable_params": self.variable_params,
             }
         )
-        return kwargs
+        dictionary.update(kwargs)
+        return dictionary
+
+    def _get_results_dict(self):
+        return {}
+
+    def get_pickle_type(self):
+        raise NotImplementedError("Must be implemented by subclass")
 
     def parameter_combinations(self):
         # --- LOOP OVER CARTESIAN PRODUCT OF VARIABLE PARAMETERS ---
@@ -47,55 +57,42 @@ class ResultsBase:
         return itertools.product(*enumerated_values)
 
     def param_combination_count(self):
-        m_n_array_total = 1
+        param_combinations = 1
         for v in self.variable_params.values():
-            m_n_array_total *= len(v)
-        return m_n_array_total
+            param_combinations *= len(v)
+        return param_combinations
 
-    def get_m_n_array_from_index(self, function, index):
-        raise NotImplementedError("Must be implemented in subclass")
+    # def get_m_n_array_from_index(self, function, index):
+    #     raise NotImplementedError("Must be implemented in subclass")
 
     def get_param_at_index(self, param_name, index):
         param_value = self.parameters.get(param_name)
         if param_value is not None:
             return param_value
-        i = index[self._variable_param_indices[param_name]]
+        i = index[self.variable_param_indices[param_name]]
         return self.variable_params[param_name][i]
-
-    @classmethod
-    def from_dict(cls, dictionary):
-        instance = cls(
-            dictionary["parameters"],
-            dictionary["variable_params"],
-        )
-        instance.processing_time = dictionary.get("processing_time", 0)
-        return instance
 
 
 class ResultsStorage(ResultsBase):
     def __init__(self, functions, parameters, variable_params):
         self.functions = functions
         self.m_n_arrays = []
-        self.processing_time = 0
         super().__init__(parameters, variable_params)
 
-    def as_dict(self, **kwargs):
-        kwargs.update(super().as_dict())
-        kwargs.setdefault("pickle_type", PickleType.M_N_ARRAYS)
-        kwargs.update(
-            {
-                "functions": self.functions,
-                "m_n_arrays": self.m_n_arrays,
-            }
-        )
-        return kwargs
+    def _get_results_dict(self, **kwargs):
+        return {
+            "functions": self.functions,
+            "m_n_arrays": self.m_n_arrays,
+        }
+
+    def get_pickle_type(self):
+        return PickleType.M_N_ARRAYS
 
     def get_m_n_array_from_values(self, function, iteration_params):
-        index = []
-        for k, v in iteration_params.items():
-            index.append(self.variable_params[k].index(v))
-        index = tuple(index)
-        return self.m_n_arrays[function][np.ravel_multi_index(index, self.index_shape)]
+        index = tuple(
+            self.variable_params[k].index(v) for k, v in iteration_params.items()
+        )
+        return self.get_m_n_array_from_index(function, index)
 
     def get_m_n_array_from_index(self, function, index):
         return self.m_n_arrays[function][np.ravel_multi_index(index, self.index_shape)]
@@ -108,11 +105,17 @@ class ResultsStorage(ResultsBase):
             dictionary["variable_params"],
         )
         instance.m_n_arrays = dictionary["m_n_arrays"]
-        instance.processing_time = dictionary.get("processing_time", 0)
+        instance.pickle_paths = dictionary.get("pickle_paths", ())
         return instance
 
+    def iter_plots(self, axes=("w", "Kx")):
+        return PlotIterator(self, axes)
 
-class CombinedResults(ResultsBase):
+    def get_epsilon_at_index(self, index):
+        return maths.get_epsilon_at_index(self, index)
+
+
+class ChunkedResultsStorage(ResultsStorage):
     """Combine the results of a set of runs.
 
     Args:
@@ -121,85 +124,76 @@ class CombinedResults(ResultsBase):
 
     def __init__(self, results):
         results = list(results)
-        self.variable_params = defaultdict(list)
-        self.chunked_param = None
+        (
+            self.chunked_param,
+            self.variable_params,
+            self.ordered_chunk_ends,
+            self.results,
+        ) = self._reconstruct_chunks(results)
+        self.parameters = results[0].parameters
+        self.functions = results[0].functions
+        super().__init__(self.functions, self.parameters, self.variable_params)
+
+    def _reconstruct_chunks(self, results):
         if len(results) < 2:
             raise ValueError(
                 "No or only one result provided. Just use ResultsStorage "
                 "directly - cba to test this case"
             )
-        self.parameters = results[0].parameters
-        self.functions = results[0].functions
-        valid_variable_params = set(results[0].variable_params)
-        self.chunk_ends_to_result = {}
+        variable_params = defaultdict(list)
         result_chunk_maxes = []
+        chunked_param = None
+        valid_variable_params = set(results[0].variable_params)
         for i, result in enumerate(results):
             if i == 0:
                 for param_name, values in result.variable_params.items():
-                    self.variable_params[param_name].extend(values)
+                    variable_params[param_name].extend(values)
                 continue
             else:
                 if set(result.variable_params) != valid_variable_params:
                     raise ValueError("Results must have the same variable parameters.")
             for param_name, values in result.variable_params.items():
                 if values != results[0].variable_params[param_name]:
-                    if self.chunked_param is None:
-                        self.chunked_param = param_name
+                    if chunked_param is None:
+                        chunked_param = param_name
                     else:
-                        if self.chunked_param != param_name:
+                        if chunked_param != param_name:
                             raise ValueError("Cannot parse chunks on multiple axes.")
-            if self.chunked_param is None:
+            if chunked_param is None:
                 raise ValueError("No chunked parameters found.")
-
-        self.variable_params[self.chunked_param] = []
+        variable_params[chunked_param] = []
         for result in results:
-            values = result.variable_params[self.chunked_param]
+            values = result.variable_params[chunked_param]
             result_chunk_maxes.append((max(values), result))
-            self.variable_params[self.chunked_param].extend(values)
+            variable_params[chunked_param].extend(values)
 
-        for k, v in self.variable_params.items():
-            self.variable_params[k] = sorted(v)
-        self.ordered_chunk_ends = []
-        self.results = []
+        for k, v in variable_params.items():
+            variable_params[k] = sorted(v)
+        ordered_chunk_ends = []
+        results = []
         for chunk_max, result in sorted(result_chunk_maxes, key=lambda x: x[0]):
-            self.ordered_chunk_ends.append(chunk_max)
-            self.results.append(result)
-        super().__init__(self.parameters, self.variable_params)
+            ordered_chunk_ends.append(chunk_max)
+            results.append(result)
+        return (chunked_param, variable_params, ordered_chunk_ends, results)
 
     def _get_chunked_index(self, index):
         value = self.variable_params[self.chunked_param][index]
         chunk_end_index = bisect_left(self.ordered_chunk_ends, value)
         mapped_result = self.results[chunk_end_index]
+        if mapped_result is None:
+            raise ValueError("No result found for index {}".format(index))
         return mapped_result, mapped_result.variable_params[self.chunked_param].index(
             value
         )
 
-    def get_m_n_array_from_values(self, function, values):
-        mapped_index = []
-        mapped_result = None
-        for v, value in zip(self.variable_params, values):
-            i = self.variable_params[v].index(value)
-            if v == self.chunked_param:
-                mapped_result, mapped_partial_index = self._get_chunked_index(i)
-                mapped_index.append(mapped_partial_index)
-            else:
-                mapped_index.append(i)
-        if mapped_result is None:
-            raise ValueError("No result found for values {}".format(values))
-        return mapped_result.get_m_n_array_from_index(function, tuple(mapped_index))
-
     def get_m_n_array_from_index(self, function, index):
-        mapped_index = []
-        mapped_result = None
-        for v, i in zip(self.variable_params, index):
-            if v == self.chunked_param:
-                mapped_result, mapped_partial_index = self._get_chunked_index(i)
-                mapped_index.append(mapped_partial_index)
-            else:
-                mapped_index.append(i)
-        if mapped_result is None:
-            raise ValueError("No result found for index {}".format(index))
-        return mapped_result.get_m_n_array_from_index(function, tuple(mapped_index))
+        index = list(index)
+        chunked_param_index = self.variable_param_indices[self.chunked_param]
+        (
+            mapped_result,
+            index[chunked_param_index],
+        ) = self._get_chunked_index(index[chunked_param_index])
+        return mapped_result.get_m_n_array_from_index(function, tuple(index))
 
 
 def calculate_m_n_sizes(results):
@@ -226,7 +220,23 @@ def calculate_m_n_sizes(results):
     return m_n_array_sizes, max_m_n_size, iteration_total
 
 
-class ProcessorMixin():
+class ProcessorBase(ResultsStorage):
+    def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
+        super().__init__(functions, parameters, variable_params)
+        self.dtype = dtype
+        if not variable_params:
+            raise ValueError("No variable parameters provided.")
+        self.m_n_array_total = 1
+        for v in variable_params.values():
+            self.m_n_array_total *= len(v)
+        self.m_n_arrays = {f: [None] * self.m_n_array_total for f in functions}
+        self.m_n_array_sizes = [None] * self.m_n_array_total
+        (
+            self.m_n_array_sizes,
+            self.parameters["max_m_n_size"],
+            self.iteration_total,
+        ) = calculate_m_n_sizes(self)
+
     def get_tasks(self):
         f = next(iter(self.functions), None)
         for i, values in enumerate(self.parameter_combinations()):
@@ -238,19 +248,7 @@ class ProcessorMixin():
             yield iteration_params
 
 
-class ResultsProcessor(ResultsStorage, ProcessorMixin):
-    def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
-        super().__init__(functions, parameters, variable_params)
-        self.dtype = dtype
-        if not variable_params:
-            raise ValueError("No variable parameters provided.")
-        self.m_n_array_total = 1
-        for v in variable_params.values():
-            self.m_n_array_total *= len(v)
-        self.m_n_arrays = {f: [None] * self.m_n_array_total for f in functions}
-        self.m_n_array_sizes = [None] * self.m_n_array_total
-        self.m_n_array_sizes, self.parameters["max_m_n_size"], self.iteration_total = calculate_m_n_sizes(self)
-
+class ResultsProcessor(ProcessorBase):
     def reserve_memory(self):
         """reserve memory for the arrays.
 
@@ -266,10 +264,9 @@ class ResultsProcessor(ResultsStorage, ProcessorMixin):
                         (m_n_size, m_n_size), dtype=self.dtype
                     )
                     arr.fill(0)
-        return (
-            (self.iteration_total * len(self.functions)) * maths.xp.dtype(self.dtype).itemsize
-        )
-
+        return (self.iteration_total * len(self.functions)) * maths.xp.dtype(
+            self.dtype
+        ).itemsize
 
     def numpyify(self):
         for f, arrs in self.m_n_arrays.items():
@@ -288,12 +285,15 @@ class ResultsProcessor(ResultsStorage, ProcessorMixin):
 
 
 class EpsilonResultsStorage(ResultsStorage):
-    def as_dict(self, **kwargs):
-        kwargs.update(super().as_dict(pickle_type=PickleType.EPSILON_VALUES))
-        kwargs["epsilon_functions"] = self.epsilon_functions
-        kwargs["epsilon_values"] = self.epsilon_values
-        del kwargs["m_n_arrays"]
-        return kwargs
+    def get_pickle_type(self):
+        return PickleType.EPSILON_VALUES
+
+    def _get_results_dict(self):
+        return {
+            "functions": self.functions,
+            "epsilon_functions": self.epsilon_functions,
+            "epsilon_values": self.epsilon_values,
+        }
 
     @classmethod
     def from_dict(cls, dictionary):
@@ -302,34 +302,33 @@ class EpsilonResultsStorage(ResultsStorage):
             dictionary["parameters"],
             dictionary["variable_params"],
         )
-        instance.processing_time = dictionary.get("processing_time", 0)
         instance.epsilon_values = dictionary["epsilon_values"]
         instance.epsilon_functions = dictionary["epsilon_functions"]
+        instance.pickle_paths = dictionary.get("pickle_paths", ())
         return instance
 
+    def get_epsilon_at_index(self, index):
+        return self.epsilon_values[:, np.ravel_multi_index(index, self.index_shape)]
 
-class EpsilonResultsProcessor(EpsilonResultsStorage, ProcessorMixin):
-    EPSILON_FUNCTIONS = ["epsp", "epsm", "Hinvp", "Hinvm"]
+
+class ChunkedEpsilonResultsStorage(ChunkedResultsStorage, EpsilonResultsStorage):
+    def get_epsilon_at_index(self, index):
+        index = list(index)
+        chunked_param_index = self.variable_param_indices[self.chunked_param]
+        (
+            mapped_result,
+            index[chunked_param_index],
+        ) = self._get_chunked_index(index[chunked_param_index])
+        return mapped_result.get_epsilon_at_index(tuple(index))
+
+
+class EpsilonResultsProcessor(ProcessorBase, EpsilonResultsStorage):
     def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
-        super().__init__(functions, parameters, variable_params)
-        self.functions = functions
-        self.dtype = dtype
-        if not variable_params:
-            raise ValueError("No variable parameters provided.")
-        self.m_n_array_total = 1
-        for v in variable_params.values():
-            self.m_n_array_total *= len(v)
-        self.m_n_arrays = {f: [None] * self.m_n_array_total for f in functions}
-        self.m_n_array_sizes = [None] * self.m_n_array_total
-        self.m_n_array_sizes, self.parameters["max_m_n_size"], self.iteration_total = calculate_m_n_sizes(self)
-        self.epsilon_functions = EpsilonResultsProcessor.EPSILON_FUNCTIONS
-        self.epsilon_values = np.zeros((len(EpsilonResultsProcessor.EPSILON_FUNCTIONS), self.m_n_array_total), dtype=self.dtype)
-
-    def as_dict(self, **kwargs):
-        dictionary = super().as_dict(pickle_type=PickleType.EPSILON_VALUES)
-        dictionary["epsilon_functions"] = self.epsilon_functions
-        dictionary["epsilon_values"] = self.epsilon_values
-        return dictionary
+        super().__init__(functions, parameters, variable_params, dtype=dtype)
+        self.epsilon_functions = maths.EPSILON_FUNCTIONS
+        self.epsilon_values = np.zeros(
+            (len(self.epsilon_functions), self.m_n_array_total), dtype=self.dtype
+        )
 
     def reserve_memory(self):
         """reserve memory for the arrays.
@@ -354,23 +353,107 @@ class EpsilonResultsProcessor(EpsilonResultsStorage, ProcessorMixin):
             self.m_n_arrays[f][i] = maths.ensure_numpy_array(arr)
         index = np.unravel_index(i, self.index_shape)
         eps = maths.get_epsilon_at_index(self, index)
-        self.epsilon_values[:, i] = [eps[k] for k in self.epsilon_functions]
+        self.epsilon_values[:, i] = eps
         for f in self.functions:
             self.m_n_arrays[f][i] = None
 
 
+class PlotIterator:
+    def __init__(self, results, axes):
+        self.results = results
+        variable_params = results.variable_params
+        extra_axes = [p for p in variable_params if p not in axes]
+        self.combination_indices = maths.cartesian_product(
+            *[np.arange(len(variable_params[v])) for v in axes]
+        )
+        if extra_axes:
+            self.extra_axes_count = np.product(
+                [len(variable_params[p]) for p in extra_axes]
+            )
+            self.extra_axes_indices = itertools.product(
+                *[range(len(variable_params[p])) for p in extra_axes]
+            )
+        else:
+            self.extra_axes_indices = [()]
+            self.extra_axes_count = 1
+
+        self.axes = axes
+        self.extra_axes = extra_axes
+        self.length = self.extra_axes_count
+
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        return self._iter()
+
+    def _iter(self):
+        results, axes = self.results, self.axes
+        src_key_params = {
+            p: results.parameters[p] for p in ("L", "tau") if p in results.parameters
+        }
+        axes_i = (
+            results.variable_param_indices[axes[0]],
+            results.variable_param_indices[axes[1]],
+        )
+        for i, extra_axes_index in enumerate(self.extra_axes_indices):
+            key_params = src_key_params.copy()
+            for j, axis in enumerate(self.extra_axes):
+                key_params[axis] = results.variable_params[axis][extra_axes_index[j]]
+            eps_plots = {}
+            for eps_f in maths.EPSILON_FUNCTIONS:
+                eps_plots[eps_f] = np.empty(
+                    [
+                        len(results.variable_params[axes[1]]),
+                        len(results.variable_params[axes[0]]),
+                    ],
+                    dtype=np.complex128,
+                )
+            for axes_index in self.combination_indices:
+
+                axes_index = list(axes_index)
+                extra_axes_i = list(extra_axes_index)
+                full_index = []
+                for v in results.variable_params:
+                    if v in axes:
+                        full_index.append(axes_index[axes.index(v)])
+                    else:
+                        full_index.append(extra_axes_i.pop(0))
+                full_index = tuple(full_index)
+
+                eps = results.get_epsilon_at_index(full_index)
+                plot_coord = (full_index[axes_i[1]], full_index[axes_i[0]])
+                for j, (eps_f, plot) in enumerate(eps_plots.items()):
+                    plot[plot_coord] = eps[j]
+
+            yield key_params, eps_plots
+
+
 def load_results(pickle_files):
+    if not pickle_files:
+        raise ValueError("No pickle files specified")
+    with open(pickle_files[0], "rb") as f:
+        results_dict = pickle.load(f)
+    # Type defaults to PickleType.M_N_ARRAYS for backwards compatibility.
+    pickle_type = results_dict.get("pickle_type", PickleType.M_N_ARRAYS)
+    if pickle_type == PickleType.M_N_ARRAYS:
+        cls = ResultsStorage
+        chunked_cls = ChunkedResultsStorage
+    elif pickle_type == PickleType.EPSILON_VALUES:
+        cls = EpsilonResultsStorage
+        chunked_cls = ChunkedEpsilonResultsStorage
+    else:
+        raise ValueError("Unknown pickle type: %s" % pickle_type)
     if len(pickle_files) == 1:
         print("Loading {}".format(pickle_files[0]))
-        with open(pickle_files[0], "rb") as f:
-            results = ResultsStorage.from_dict(pickle.load(f))
+        results = cls.from_dict(results_dict)
     else:
         all_results = []
         for pickle_file in pickle_files:
             with open(pickle_file, "rb") as f:
                 print("Loading {}".format(pickle_file))
-                all_results.append(ResultsStorage.from_dict(pickle.load(f)))
-        results = CombinedResults(all_results)
+                all_results.append(cls.from_dict(pickle.load(f)))
+        results = chunked_cls(all_results)
     return results
 
 

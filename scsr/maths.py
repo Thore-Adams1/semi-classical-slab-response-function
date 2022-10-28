@@ -13,6 +13,7 @@ except ImportError:
 xp = np
 FUNCTIONS = {"A2", "A1", "G", "H"}
 KNOWN_PARAMS = {"P", "w", "Kx", "L", "Ln", "tau", "steps", "lc"}
+EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm")
 PARAM_DEFAULTS = {
     #  DEFINES SIZE OF FUNCTION MATRICES
     # "m_n_size": 2,
@@ -60,6 +61,18 @@ def set_gpu_mode(enabled):
             globals()["xp"] = cp
     else:
         globals()["xp"] = np
+
+
+def cartesian_product(*arrays, reshaped=True):
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+    if reshaped:
+        return arr.reshape(-1, la)
+    else:
+        return arr
 
 
 def values_differ(d1, d2, keys):
@@ -490,9 +503,11 @@ def get_epsilon_at_index(results, index):
     Fp = sign_Hinvp * np.exp(slog_Hinvp)
     Fm = sign_Hinvm * np.exp(slog_Hinvm)
 
-    return {
-        "epsp": epsp[0, 0],
-        "epsm": epsm[0, 0],
-        "Hinvp": 1 / (Fp),
-        "Hinvm": 1 / (Fm),
-    }
+    return (
+        # It's critical that the order of the terms here matches the order
+        # of EPSILON_FUNCTIONS.
+        epsp[0, 0],
+        epsm[0, 0],
+        1 / (Fp),
+        1 / (Fm),
+    )

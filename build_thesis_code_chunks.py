@@ -70,7 +70,6 @@ def get_commands(args, tc_args, given_args, pickles_dir):
                 str(chunk),
             ]
         )
-        commands.append()
         command_parts = [
             "python3",
             tc.__file__,

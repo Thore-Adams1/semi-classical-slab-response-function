@@ -81,6 +81,12 @@ def get_parser():
     )
     parser.add_argument(
         "-f",
+        "--force",
+        action="store_true",
+        help="Overwrite pickle file if it exists.",
+    )
+    parser.add_argument(
+        "-d",
         "--figs-dir",
         help="Directory in which to store figures. Defaults to a timestamped \n"
         r"'./figs/[DATE]_[TIME]' directory",

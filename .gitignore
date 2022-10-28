@@ -1,9 +1,10 @@
-__pycache__/
+__pycache__
 debug/
 __*.py
 # thesis_code.py Results
 *.pkl
 results*
+!scsr/*.py
 # Plots
 figs
 *.png

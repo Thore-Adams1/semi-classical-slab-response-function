@@ -15,9 +15,9 @@ jobscript = """\
 #job name
 #SBATCH --job-name='sam_praill_job_{name}'
 #job stdout file
-#SBATCH --output=bench.out.%J
+#SBATCH --output={log_dir}/log.stdout.%J
 #job stderr file
-#SBATCH --error=bench.err.%J
+#SBATCH --error={log_dir}/log.stderr.%J
 #maximum job time in D-HH:MM
 #SBATCH --time={max_days}-00:00
 #number of parallel processes (tasks) you are requesting - maps to MPI processes
@@ -117,6 +117,7 @@ def main():
 
     job_root = get_unique_dir(results_dir)
     pickles_dir = os.path.join(job_root, "pickles")
+    log_dir = os.path.join(job_root, "log")
     commands = get_commands(args, tc_args, given_args, pickles_dir)
     print("Job root dir: {}\nCommands:\n\n{}\n".format(job_root, "\n".join(commands)))
     if args.create_job_script:
@@ -142,7 +143,7 @@ def main():
             )
         else:
             gpu_sbatch, gpu_commands = "", ""
-        for dir_path in (job_root, pickles_dir):
+        for dir_path in (job_root, pickles_dir, log_dir):
             os.makedirs(dir_path)
         job_script_path = os.path.join(job_root, "job.sh")
         chunks_config = "#SBATCH --array=1{}\n".format(
@@ -157,6 +158,7 @@ def main():
                     gpu_commands=gpu_commands,
                     chunks_sbatch=chunks_config,
                     max_days=1 if tc_args.gpu else 3,
+                    log_dir=log_dir
                 )
             )
         print(

@@ -25,7 +25,7 @@ from tqdm import tqdm
 from textwrap import dedent
 
 # Local
-from scsr.results import ResultsStorage, CombinedResults
+from scsr.results import Results, ChunkedResults
 
 
 def read_array_from_csv(file_path):
@@ -213,15 +213,15 @@ def main():
 
     if len(args.pickle_files) == 1:
         with open(args.pickle_files[0], "rb") as f:
-            results = ResultsStorage.from_dict(pickle.load(f))
+            results = Results.from_dict(pickle.load(f))
             file_msg = args.pickle_files[0]
     else:
         all_results = []
         for pickle_file in args.pickle_files:
             with open(pickle_file, "rb") as f:
-                all_results.append(ResultsStorage.from_dict(pickle.load(f)))
+                all_results.append(Results.from_dict(pickle.load(f)))
         file_msg = f"{len(args.pickle_files)} pickles"
-        results = CombinedResults(all_results)
+        results = ChunkedResults(all_results)
     if not results.functions:
         raise ValueError("No functions found in results")
     print(f"Comparing results in {file_msg} with matlab code...")

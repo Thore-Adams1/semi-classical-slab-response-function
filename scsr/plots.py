@@ -20,6 +20,16 @@ from .results import load_results, PickleType
 from . import maths
 
 
+# Globals
+labels_by_param = {
+    "Kx": "K_x",
+    "lc": "lc",
+    "L": "L",
+    "P": "P",
+    "w": "\\omega",
+}
+
+
 def write_plot(
     axes,
     axis_labels,
@@ -30,14 +40,13 @@ def write_plot(
     variable_params,
     figs_dir="figs",
 ):
+    
     ax_v_array = np.array(variable_params[axes[0]])
     ax_h_array = np.array(variable_params[axes[1]])
     ax_v_vals = ax_v_array.T * np.ones([len(ax_h_array), len(ax_v_array)])
     ax_h_vals = np.ones([len(ax_v_array), len(ax_h_array)]) * ax_h_array.T
-
-    fig_name = "({}) = ({})".format(
-        ",".join(iteration_params.keys()), ",".join(map(str, iteration_params.values()))
-    )
+    params_str = "_".join("{}={:g}".format(k, v) for k, v in iteration_params.items() if k in labels_by_param)
+    fig_name = " ".join("{}={:g}".format(labels_by_param[k], v) for k, v in iteration_params.items() if k in labels_by_param)
     fig, ax = plt.subplots()
     c = ax.pcolor(ax_h_vals.T, ax_v_vals, array_2d, cmap=cm.inferno)  # , shading="auto"
     plt.colorbar(c, ax=ax)
@@ -45,7 +54,6 @@ def write_plot(
     plt.ylabel(f"${axis_labels[0]}$")
 
     ax.set_title("{} {}".format(title, fig_name))
-    params_str = "_".join("{}={:g}".format(k, v) for k, v in iteration_params.items())
     fig_name = (
         "{}_{}.png".format(func_name, params_str)
         if params_str

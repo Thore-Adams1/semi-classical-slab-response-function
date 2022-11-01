@@ -30,6 +30,11 @@ class ResultsBase:
         self.pickle_paths = []
         self.variable_param_indices = {k: i for i, k in enumerate(variable_params)}
         self.index_shape = tuple(len(v) for v in self.variable_params.values())
+        self.metadata = {}
+
+    def __repr__(self):
+        p_args, v_args = self.reconstruct_readable_param_args()
+        return f"<{self.__class__.__name__}: {' '.join(p_args)}, {' '.join(v_args)}>"
 
     def as_dict(self, **kwargs):
         dictionary = self._get_results_dict()
@@ -72,8 +77,66 @@ class ResultsBase:
         i = index[self.variable_param_indices[param_name]]
         return self.variable_params[param_name][i]
 
+    def update_metadata(self, result_dict):
+        meta = result_dict.get("metadata")
+        if meta is None:
+            meta = result_dict.get("details",{})
+        args = result_dict.get("args")
+        if args is not None:
+            meta["parsed_args"] = args
+        self.metadata = meta
 
-class ResultsStorage(ResultsBase):
+    def reconstruct_readable_param_args(self, all_chunks=False):
+        parsed_args = self.metadata.get("parsed_args")
+        if parsed_args is None:
+            return [], []
+        p_args = []
+        if all_chunks:
+            params = list(itertools.chain.from_iterable(parsed_args["params"]))
+        else:
+            arg_params = {k for k,v in
+                itertools.chain.from_iterable(parsed_args["params"])
+            }
+            params = [(k,v) for k,v in self.parameters.items() if k in arg_params]
+        if params:
+            param_fmt = lambda v: (
+                ",".join(str(i) for i in v) if hasattr(v, "__getitem__") else f"{v:g}"
+            )
+            for k, v in params:
+                if k != "max_tile_size":
+                    p_args.append(f"{k}={param_fmt(v)}")
+        if all_chunks:
+            variable_params = list(
+                itertools.chain.from_iterable(parsed_args["variable_params"])
+            )
+        else:
+            variable_params = self.variable_params.items()
+        v_args = []
+        for k,v in variable_params:
+            vparam_fmt = lambda v: (
+                ",".join(str(i) for i in v) if len(v) < 3 else f"{v[0]}:{v[-1]}:{len(v)}"
+            )
+            if len(v) > 3:
+                v_args.append(f"{k}={vparam_fmt(v)}")
+        return p_args, v_args
+
+    
+    def get_param_args(self, all_chunks=False):
+        p_args, v_args = self.reconstruct_readable_param_args(all_chunks=all_chunks)
+        args = []
+        if p_args:
+            args.extend(["-p"] + p_args)
+        if v_args:
+            args.extend(["-v"] + v_args)
+        return args
+
+
+
+                
+
+
+
+class Results(ResultsBase):
     def __init__(self, functions, parameters, variable_params):
         self.functions = functions
         self.m_n_arrays = []
@@ -106,6 +169,7 @@ class ResultsStorage(ResultsBase):
         )
         instance.m_n_arrays = dictionary["m_n_arrays"]
         instance.pickle_paths = dictionary.get("pickle_paths", ())
+        instance.update_metadata(dictionary)
         return instance
 
     def iter_plots(self, axes=("w", "Kx")):
@@ -115,11 +179,11 @@ class ResultsStorage(ResultsBase):
         return maths.get_epsilon_at_index(self, index)
 
 
-class ChunkedResultsStorage(ResultsStorage):
+class ChunkedResults(Results):
     """Combine the results of a set of runs.
 
     Args:
-        results (list[ResultsStorage]): list of results.
+        results (list[Results]): list of results.
     """
 
     def __init__(self, results):
@@ -134,10 +198,20 @@ class ChunkedResultsStorage(ResultsStorage):
         self.functions = results[0].functions
         super().__init__(self.functions, self.parameters, self.variable_params)
 
+    def __repr__(self):
+        p_args, v_args = self.reconstruct_readable_param_args()
+        return "<{}: {}, {}, {}/{}>".format(
+            self.__class__.__name__,
+            ' '.join(p_args),
+            ' '.join(v_args),
+            self.chunked_param,
+            len(self.results)
+        )
+
     def _reconstruct_chunks(self, results):
         if len(results) < 2:
             raise ValueError(
-                "No or only one result provided. Just use ResultsStorage "
+                "No or only one result provided. Just use Results "
                 "directly - cba to test this case"
             )
         variable_params = defaultdict(list)
@@ -195,6 +269,9 @@ class ChunkedResultsStorage(ResultsStorage):
         ) = self._get_chunked_index(index[chunked_param_index])
         return mapped_result.get_m_n_array_from_index(function, tuple(index))
 
+    def reconstruct_readable_param_args(self, all_chunks=None):
+        return self.results[0].reconstruct_readable_param_args(all_chunks=True)
+
 
 def calculate_m_n_sizes(results):
     # --- SET UP INTEGRAL ARRAYS (m*n) ---
@@ -220,7 +297,7 @@ def calculate_m_n_sizes(results):
     return m_n_array_sizes, max_m_n_size, iteration_total
 
 
-class ProcessorBase(ResultsStorage):
+class ProcessorBase(Results):
     def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
         super().__init__(functions, parameters, variable_params)
         self.dtype = dtype
@@ -249,6 +326,10 @@ class ProcessorBase(ResultsStorage):
 
 
 class ResultsProcessor(ProcessorBase):
+    def size_estimate(self):
+        return (self.iteration_total * len(self.functions)) * maths.xp.dtype(
+            self.dtype
+        ).itemsize
     def reserve_memory(self):
         """reserve memory for the arrays.
 
@@ -264,9 +345,6 @@ class ResultsProcessor(ProcessorBase):
                         (m_n_size, m_n_size), dtype=self.dtype
                     )
                     arr.fill(0)
-        return (self.iteration_total * len(self.functions)) * maths.xp.dtype(
-            self.dtype
-        ).itemsize
 
     def numpyify(self):
         for f, arrs in self.m_n_arrays.items():
@@ -284,7 +362,7 @@ class ResultsProcessor(ProcessorBase):
             self.m_n_arrays[f][i] = maths.ensure_numpy_array(arr)
 
 
-class EpsilonResultsStorage(ResultsStorage):
+class EpsilonResults(Results):
     def get_pickle_type(self):
         return PickleType.EPSILON_VALUES
 
@@ -305,13 +383,14 @@ class EpsilonResultsStorage(ResultsStorage):
         instance.epsilon_values = dictionary["epsilon_values"]
         instance.epsilon_functions = dictionary["epsilon_functions"]
         instance.pickle_paths = dictionary.get("pickle_paths", ())
+        instance.update_metadata(dictionary)
         return instance
 
     def get_epsilon_at_index(self, index):
         return self.epsilon_values[:, np.ravel_multi_index(index, self.index_shape)]
 
 
-class ChunkedEpsilonResultsStorage(ChunkedResultsStorage, EpsilonResultsStorage):
+class ChunkedEpsilonResults(ChunkedResults, EpsilonResults):
     def get_epsilon_at_index(self, index):
         index = list(index)
         chunked_param_index = self.variable_param_indices[self.chunked_param]
@@ -322,13 +401,16 @@ class ChunkedEpsilonResultsStorage(ChunkedResultsStorage, EpsilonResultsStorage)
         return mapped_result.get_epsilon_at_index(tuple(index))
 
 
-class EpsilonResultsProcessor(ProcessorBase, EpsilonResultsStorage):
+class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
     def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
         super().__init__(functions, parameters, variable_params, dtype=dtype)
         self.epsilon_functions = maths.EPSILON_FUNCTIONS
         self.epsilon_values = np.zeros(
             (len(self.epsilon_functions), self.m_n_array_total), dtype=self.dtype
         )
+
+    def size_estimate(self):
+        return (self.epsilon_values.size) * maths.xp.dtype(self.dtype).itemsize
 
     def reserve_memory(self):
         """reserve memory for the arrays.
@@ -338,7 +420,6 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResultsStorage):
         """
         # reserve array mem - so that memory errors are raised early
         self.epsilon_values.fill(0)
-        return (self.epsilon_values.size) * maths.xp.dtype(self.dtype).itemsize
 
     def numpyify(self):
         for f, arrs in self.m_n_arrays.items():
@@ -390,7 +471,7 @@ class PlotIterator:
     def _iter(self):
         results, axes = self.results, self.axes
         src_key_params = {
-            p: results.parameters[p] for p in ("L", "tau") if p in results.parameters
+            p: results.parameters[p] for p in results.parameters
         }
         axes_i = (
             results.variable_param_indices[axes[0]],
@@ -437,11 +518,11 @@ def load_results(pickle_files):
     # Type defaults to PickleType.M_N_ARRAYS for backwards compatibility.
     pickle_type = results_dict.get("pickle_type", PickleType.M_N_ARRAYS)
     if pickle_type == PickleType.M_N_ARRAYS:
-        cls = ResultsStorage
-        chunked_cls = ChunkedResultsStorage
+        cls = Results
+        chunked_cls = ChunkedResults
     elif pickle_type == PickleType.EPSILON_VALUES:
-        cls = EpsilonResultsStorage
-        chunked_cls = ChunkedEpsilonResultsStorage
+        cls = EpsilonResults
+        chunked_cls = ChunkedEpsilonResults
     else:
         raise ValueError("Unknown pickle type: %s" % pickle_type)
     if len(pickle_files) == 1:

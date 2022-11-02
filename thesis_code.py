@@ -39,6 +39,7 @@ import datetime
 import queue
 import multiprocessing as mp
 import math
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 # Third Party
@@ -240,8 +241,11 @@ def main(args):
     )
 
     iterations = result_proc.get_tasks()
-    expected_file_size = readable_filesize(result_proc.reserve_memory())
-    print(f"Expected File Size: {expected_file_size} (Data Type: complex{args.dtype})")
+    expected_file_size = readable_filesize(result_proc.size_estimate())
+    print(
+        f"Expected Size: {expected_file_size} (dtype: complex{args.dtype}) "
+        "Reserving memory..."
+    )
     result_proc.reserve_memory()
     progress_bar = tqdm(
         desc="Computing Functions",
@@ -376,7 +380,7 @@ def main(args):
     results_dict = result_proc.as_dict()
     results_dict["args"] = vars(args)
     processing_time = datetime.datetime.now() - start_time
-    results_dict["details"] = {"runtime": processing_time}
+    results_dict["details"] = {"runtime": processing_time, "cli_args": sys.argv}
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
         output_path = args.output or "results/output.pkl"

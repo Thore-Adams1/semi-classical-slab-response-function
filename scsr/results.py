@@ -497,7 +497,10 @@ class PlotIterator:
                 full_index = []
                 for v in results.variable_params:
                     if v in axes:
-                        full_index.append(axes_index[axes.index(v)])
+                        axis_i = axes_index[axes.index(v)]
+                        axis_v = results.variable_params[v][axis_i]
+                        key_params[v] = axis_v
+                        full_index.append(axis_i)
                     else:
                         full_index.append(extra_axes_i.pop(0))
                 full_index = tuple(full_index)

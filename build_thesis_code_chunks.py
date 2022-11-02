@@ -123,7 +123,7 @@ def main():
     if args.create_job_script:
         if tc_args.gpu:
             gpu_sbatch = (
-                "#SBATCH --gres=gpu:2\n" "#SBATCH -p gpu  # to request P100 GPUs\n"
+                "#SBATCH --gres=gpu:2\n" "#SBATCH -p gpu_v100  # to request V100 GPUs\n"
             )
             gpu_commands = dedent(
                 """\

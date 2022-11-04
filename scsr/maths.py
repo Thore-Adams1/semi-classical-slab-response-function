@@ -501,8 +501,8 @@ def get_epsilon_at_index(results, index):
     sign_Hinvm, slog_Hinvm = np.linalg.slogdet(Hinvm)
 
     # VPW
-    Fp = sign_Hinvp * slog_Hinvp
-    Fm = sign_Hinvm * slog_Hinvm
+    Fp = sign_Hinvp * np.exp(slog_Hinvp)
+    Fm = sign_Hinvm * np.exp(slog_Hinvm)
 
     return (
         # It's critical that the order of the terms here matches the order

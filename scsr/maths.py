@@ -463,16 +463,16 @@ def get_epsilon_at_index(results, index):
     G_minus = np.matrix(G[1::2, 1::2])
 
     # Create required arrays from output arrays
-    Z_plus = np.ones([np.shape(H_plus)[0]])
+    Z_plus = np.ones([H_plus.shape[0]])
     Z_plus[0] = 1 / 2
     Z_plus_matrix = np.matrix(Z_plus).T
-    Z_minus = np.ones([np.shape(H_plus)[0]])
+    Z_minus = np.ones([H_plus.shape[0]])
     Z_minus_matrix = np.matrix(Z_minus).T
 
     G_vec_plus = np.matrix(G_plus[:, 0] * 2)
     G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
 
-    Iden = np.identity(np.shape(H_plus)[0])
+    Iden = np.identity(H_plus.shape[0])
 
     iden_w_sq = np.matrix(Iden * w_bar**2)
 
@@ -503,23 +503,6 @@ def get_epsilon_at_index(results, index):
 
     # A_plus = np.matrix(A[::2, ::2]).T
     A_minus = np.matrix(A[1::2, 1::2]).T
-
-    # Create required arrays from output arrays
-    Z_plus = np.ones([H_plus.shape[0]])
-    Z_plus[0] = 1 / 2
-    Z_plus_matrix = np.matrix(Z_plus).T
-    Z_minus = np.ones([H_plus.shape[0]])
-    Z_minus_matrix = np.matrix(Z_minus).T
-
-    G_vec_plus = np.matrix(G_plus[:, 0] * 2)
-    G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
-
-    Iden = np.identity(H_plus.shape[0])
-
-    iden_w_sq = np.matrix(Iden * w_bar**2)
-
-    Hinvp = np.linalg.inv(iden_w_sq - H_plus)
-    Hinvm = np.linalg.inv(iden_w_sq - H_minus)
 
     chi_plus = np.array(np.linalg.inv(iden_w_sq - H_plus - G_vec_plus) * A_minus)
     # chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)

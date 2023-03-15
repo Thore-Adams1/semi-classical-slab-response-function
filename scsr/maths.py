@@ -13,7 +13,7 @@ except ImportError:
 xp = np
 FUNCTIONS = {"A2", "A1", "G", "H"}
 KNOWN_PARAMS = {"P", "w", "Kx", "L", "Ln", "tau", "steps", "lc"}
-EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm")
+EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm", "Ptilde")
 PARAM_DEFAULTS = {
     #  DEFINES SIZE OF FUNCTION MATRICES
     # "m_n_size": 2,
@@ -451,8 +451,6 @@ def ensure_numpy_array(obj):
 
 def get_epsilon_at_index(results, index):
     G = results.get_m_n_array_from_index("G", index)
-    # A1 = results.get_m_n_array_from_index("A1", index)
-    # A2 = results.get_m_n_array_from_index("A2", index)
     H = results.get_m_n_array_from_index("H", index)
 
     tau = results.get_param_at_index("tau", index)
@@ -464,13 +462,7 @@ def get_epsilon_at_index(results, index):
     G_plus = np.matrix(G[::2, ::2])
     G_minus = np.matrix(G[1::2, 1::2])
 
-    # A = A1 + A2
-    # A_plus = A[0::2, 0::2]
-    # A_minus = A[1::2, 1::2]
-
-    """
-    Create required arrays from output arrays
-    """
+    # Create required arrays from output arrays
     Z_plus = np.ones([np.shape(H_plus)[0]])
     Z_plus[0] = 1 / 2
     Z_plus_matrix = np.matrix(Z_plus).T
@@ -487,9 +479,7 @@ def get_epsilon_at_index(results, index):
     Hinvp = np.linalg.inv(iden_w_sq - H_plus)
     Hinvm = np.linalg.inv(iden_w_sq - H_minus)
 
-    """
-    Calculate epsilon
-    """
+    # Calculate epsilon
     epsp = (
         1 - G_vec_plus.T * Hinvp * Z_plus_matrix
     )  # The poles of this function give symmetric SPWs.
@@ -504,11 +494,70 @@ def get_epsilon_at_index(results, index):
     Fp = sign_p * slog_p
     Fm = sign_m * slog_m
 
+    # Calculating P tilde:
+    A1 = results.get_m_n_array_from_index("A1", index)
+    A2 = results.get_m_n_array_from_index("A2", index)
+    A = A1 - A2
+
+    L = results.get_param_at_index("L", index)
+
+    # A_plus = np.matrix(A[::2, ::2]).T
+    A_minus = np.matrix(A[1::2, 1::2]).T
+
+    # Create required arrays from output arrays
+    Z_plus = np.ones([H_plus.shape[0]])
+    Z_plus[0] = 1 / 2
+    Z_plus_matrix = np.matrix(Z_plus).T
+    Z_minus = np.ones([H_plus.shape[0]])
+    Z_minus_matrix = np.matrix(Z_minus).T
+
+    G_vec_plus = np.matrix(G_plus[:, 0] * 2)
+    G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
+
+    Iden = np.identity(H_plus.shape[0])
+
+    iden_w_sq = np.matrix(Iden * w_bar**2)
+
+    Hinvp = np.linalg.inv(iden_w_sq - H_plus)
+    Hinvm = np.linalg.inv(iden_w_sq - H_minus)
+
+    chi_plus = np.array(np.linalg.inv(iden_w_sq - H_plus - G_vec_plus) * A_minus)
+    # chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)
+
+    chi = chi_plus
+
+    # Defining constants
+    k = 2
+
+    # Inputting the dimensions of chi matrix
+    m_max, n_max = chi.shape
+
+    # Calculating q_n and q_m
+    m = np.arange(m_max).reshape(-1, 1)
+    n = np.arange(n_max).reshape(1, -1)
+    q_m = np.pi * m / L
+    q_n = np.pi * n / L
+
+    # Calculating L_m
+    L_m = L / (2 - (m == 0).astype(int))
+
+    # Calculating P_n
+    exp_k_L = np.exp(-k * L)
+    P_n = np.zeros((1, n_max), dtype=results.get_dtype())
+    P_n[0, :] = (
+        chi.T * ((1 - (-1) ** m * exp_k_L) / (L_m * (k**2 + q_m**2)))
+    ).sum(axis=0)
+
+    P_tilde = np.sum(
+        2 * np.pi * (k * P_n) / (k**2 + q_n**2) * (1 - (-1) ** n * exp_k_L)
+    )
+
     return (
         # It's critical that the order of the terms here matches the order
         # of EPSILON_FUNCTIONS.
         epsp[0, 0],
         epsm[0, 0],
-        1/Fp,
-        1/Fm,
+        1 / Fp,
+        1 / Fm,
+        P_tilde,
     )

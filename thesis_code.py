@@ -385,7 +385,7 @@ def main(args):
     results_dict = result_proc.as_dict()
     results_dict["args"] = vars(args)
     processing_time = datetime.datetime.now() - start_time
-    results_dict["details"] = {"runtime": processing_time, "cli_args": sys.argv}
+    results_dict["metadata"] = {"runtime": processing_time, "cli_args": sys.argv}
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
         output_path = args.output or "results/output.pkl"

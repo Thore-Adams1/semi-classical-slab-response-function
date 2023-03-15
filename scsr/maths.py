@@ -507,13 +507,11 @@ def get_epsilon_at_index(results, index):
     chi_plus = np.array(np.linalg.inv(iden_w_sq - H_plus - G_vec_plus) * A_minus)
     # chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)
 
-    chi = chi_plus
-
     # Defining constants
     k = 2
 
     # Inputting the dimensions of chi matrix
-    m_max, n_max = chi.shape
+    m_max, n_max = chi_plus.shape
 
     # Calculating q_n and q_m
     m = np.arange(m_max).reshape(-1, 1)
@@ -528,7 +526,7 @@ def get_epsilon_at_index(results, index):
     exp_k_L = np.exp(-k * L)
     P_n = np.zeros((1, n_max), dtype=results.get_dtype())
     P_n[0, :] = (
-        chi.T * ((1 - (-1) ** m * exp_k_L) / (L_m * (k**2 + q_m**2)))
+        chi_plus.T * ((1 - (-1) ** m * exp_k_L) / (L_m * (k**2 + q_m**2)))
     ).sum(axis=0)
 
     P_tilde = np.sum(

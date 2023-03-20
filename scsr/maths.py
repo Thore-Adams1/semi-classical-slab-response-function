@@ -491,8 +491,8 @@ def get_epsilon_at_index(results, index):
     sign_m, slog_m = np.linalg.slogdet(Hinvm)
 
     # VPW
-    Fp = sign_p * slog_p
-    Fm = sign_m * slog_m
+    Fp = sign_p * np.exp(slog_p)
+    Fm = sign_m * np.exp(slog_m)
 
     # Calculating P tilde:
     A1 = results.get_m_n_array_from_index("A1", index)

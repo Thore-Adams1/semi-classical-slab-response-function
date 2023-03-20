@@ -497,18 +497,18 @@ def get_epsilon_at_index(results, index):
         1 - G_vec_minus.T * Hinvm * Z_minus_matrix
     )  # The poles of this function give anti-symmetric SPWs
 
-    sign_p, slog_p = np.linalg.slogdet(iden_w_sq - H_plus)
-    sign_m, slog_m = np.linalg.slogdet(iden_w_sq - H_minus)
+    sign_p, slog_p = np.linalg.slogdet(Hinvp)
+    sign_m, slog_m = np.linalg.slogdet(Hinvm)
 
     # VPW
-    Fp = sign_p * slog_p
-    Fm = sign_m * slog_m
+    Fp = sign_p * np.exp(slog_p)
+    Fm = sign_m * np.exp(slog_m)
 
     return (
         # It's critical that the order of the terms here matches the order
         # of EPSILON_FUNCTIONS.
         epsp[0, 0],
         epsm[0, 0],
-        1/Fp,
-        1/Fm,
+        Fp,
+        Fm,
     )

@@ -53,7 +53,7 @@ def queue_deletion_by_pattern(pattern, files=True, dirs=True, interactive=True):
             yield result
 
 
-def cleanup_results():
+def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-a",
@@ -82,7 +82,11 @@ def cleanup_results():
         default=os.getcwd(),
         help="Dir to cleanup (default is current directory).",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def cleanup_results():
+    args = get_parser().parse_args()
     args.figs = args.all or args.figs
     args.jobs = args.all or args.jobs
     args.pickles = args.all or args.pickles

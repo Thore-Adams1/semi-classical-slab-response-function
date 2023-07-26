@@ -11,3 +11,4 @@ figs
 # Profiling results
 *.lprof
 *.prof
+doc/_*

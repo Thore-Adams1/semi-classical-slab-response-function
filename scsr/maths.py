@@ -1,8 +1,14 @@
 # Standard
+from __future__ import annotations
 import operator
+import math
+import itertools
+from typing import Tuple, Callable, Iterable, Hashable, Generator
 
 # Third Party
 import numpy as np
+from numpy.typing import NDArray, ArrayLike
+from numpy import ndarray as ndarray
 
 try:
     import cupy as cp
@@ -13,7 +19,7 @@ except ImportError:
 xp = np
 FUNCTIONS = {"A2", "A1", "G", "H"}
 KNOWN_PARAMS = {"P", "w", "Kx", "L", "Ln", "tau", "steps", "lc"}
-EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm")
+EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm", "Ptilde")
 PARAM_DEFAULTS = {
     #  DEFINES SIZE OF FUNCTION MATRICES
     # "m_n_size": 2,
@@ -43,10 +49,18 @@ PARAM_DESCRIPTIONS = {
         "the main thread (No need to adjust)."
     ),
 }
+ArrayOp = Callable[[ndarray, ndarray], ndarray]
 
 
-def set_gpu_mode(enabled):
+def set_gpu_mode(enabled: bool):
     """Set whether to use GPU or not.
+
+    This sets the `xp` global within the maths module to the `cupy`
+    module, rather than numpy as it is by default.
+
+    This should probably be set before calling :meth:`update_arrays()`, to
+    ensure that all the cached arrays are CuPy arrays and loaded into GPU
+    memory.
 
     Args:
         enabled (bool): True to use GPU, False to use CPU.
@@ -63,19 +77,72 @@ def set_gpu_mode(enabled):
         globals()["xp"] = np
 
 
-def cartesian_product(*arrays, reshaped=True):
+def cartesian_product(*arrays: ndarray, make_2d: bool = True):
     la = len(arrays)
     dtype = np.result_type(*arrays)
     arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
     for i, a in enumerate(np.ix_(*arrays)):
         arr[..., i] = a
-    if reshaped:
+    if make_2d:
         return arr.reshape(-1, la)
     else:
         return arr
 
 
-def values_differ(d1, d2, keys):
+def chunk_indices(length: int, chunk_size: int):
+    if chunk_size > length:
+        yield 0, length
+        return
+    full_chunks, remainder = divmod(length, chunk_size)
+    chunk_start = 0
+    chunk_end = chunk_size
+    for _ in range(full_chunks):
+        chunk_end = chunk_start + chunk_size
+        yield chunk_start, chunk_end
+        chunk_start = chunk_end
+    if remainder:
+        yield chunk_end, chunk_end + remainder
+
+
+def tile_2d_arr(
+    width: int, height: int, max_width: int, max_height: int
+) -> Generator[Tuple[int, int, int, int], None, None]:
+    """Yields tile dimensions of tiles of an array.
+
+    Args:
+        width: Width of array
+        height: Height of array
+        max_width: Max width of tile
+        max_height: Max height of tile
+
+    Example:
+        >>> for tile in tile_2d_arr(5,5,3,2): print(tile)
+        (0, 3, 0, 2)
+        (3, 5, 0, 2)
+        (0, 3, 2, 4)
+        (3, 5, 2, 4)
+        (0, 3, 4, 5)
+        (3, 5, 4, 5)
+        >>> for tile in tile_2d_arr(7,3,4,2): print(tile)
+        (0, 4, 0, 2)
+        (4, 7, 0, 2)
+        (0, 4, 2, 3)
+        (4, 7, 2, 3)
+
+    Yields:
+        tuple with the 4 values for each tile:
+        - horizontal start index
+        - horizontal end index + 1
+        - vertical start index
+        - vertical end index + 1
+    """
+    width_chunks = chunk_indices(width, max_width)
+    height_chunks = chunk_indices(height, max_height)
+    for (vs, ve), (hs, he) in itertools.product(height_chunks, width_chunks):
+        yield hs, he, vs, ve
+
+
+def values_differ(d1: dict, d2: dict, keys: Iterable[Hashable]):
     """Check if any of the values for the given keys differ between d1 & d2.
 
 
@@ -91,24 +158,52 @@ def values_differ(d1, d2, keys):
             return True
 
 
-def op_across_axes(arr_a, arr_b, axes, op):
-    """Multiply two arrays along the given axes."""
+def op_across_axes(
+    arr_a: ndarray, arr_b: ndarray, axes: list[int], op: ArrayOp
+) -> ndarray:
+    """Perform operation on two arrays along the given axes.
+
+    Example:
+        >>> arr_a, arr_b = np.arange(9).reshape(3,3), np.array([[[-1,1,0]]])
+        >>> op_across_axes(arr_a, arr_b, [0,2,1], operator.mul)
+        array([[[ 0,  3,  0],
+                [-1,  4,  0],
+                [-2,  5,  0]]])
+        >>> op_across_axes(arr_a, arr_b, [0,1,2], operator.mul)
+        array([[[ 0,  1,  0],
+                [-3,  4,  0],
+                [-6,  7,  0]]])
+    """
     return (op(arr_a, arr_b.transpose(axes))).transpose(np.argsort(axes))
 
 
-def stack_broadcast(arr_a, arr_b):
+def stack_broadcast(arr_a: ndarray, arr_b: ndarray) -> ndarray:
     """
     Given arr_a (with n dims) and arr_b (with m dims), return a new array with
     n+m dims, with arr_b broadcast across on every new leading axis.
+
+    Example:
+        >>> stack_broadcast(np.empty((2,2)), np.array([5,10]))
+        array([[[ 5, 10],
+                [ 5, 10]],
+               [[ 5, 10],
+                [ 5, 10]]])
     """
     return xp.broadcast_to(arr_b, (*arr_a.shape, *arr_b.shape))
 
 
-def stack_op(arr_a, arr_b, op):
+def stack_op(arr_a: ndarray, arr_b: ndarray, op: ArrayOp) -> ndarray:
     """
-    Given arr_a (with n dims) and arr_b (with m dims), return a new array with
-    n+m dims, where each axis is a combination of an arr_a value and an arr_b
+    Given arr_a (with x dims) and arr_b (with y dims), return a new array with
+    x+y dims, where each axis is a combination of an arr_a value and an arr_b
     value.
+
+    Example:
+        >>> stack_op(np.array([[1,2],[3,4]]), np.array([-1,10]), operator.mul)
+        array([[[-1, 10],
+                [-2, 20]],
+               [[-3, 30],
+                [-4, 40]]])
     """
     stacked_bcast = stack_broadcast(arr_a, arr_b)
     l = list(range(stacked_bcast.ndim))
@@ -116,29 +211,68 @@ def stack_op(arr_a, arr_b, op):
     return op_across_axes(arr_a, stacked_bcast, axes, op)
 
 
-def smul(arr_a, arr_b):
+def smul(arr_a: ndarray, arr_b: ndarray) -> ndarray:
+    """Alias for `stack_op(arr_a, arr_b, operator.mul)`"""
     return stack_op(arr_a, arr_b, operator.mul)
 
 
-def sadd(arr_a, arr_b):
+def sadd(arr_a: ndarray, arr_b: ndarray) -> ndarray:
+    """Alias for `stack_op(arr_a, arr_b, operator.add)`"""
     return stack_op(arr_a, arr_b, operator.add)
 
 
-def mul_axes(arr_a, arr_b, axes):
+def mul_axes(arr_a: ndarray, arr_b: ndarray, axes: list[int]) -> ndarray:
+    """Alias for `op_across_axes(arr_a, arr_b, axes, operator.mul)`"""
     return op_across_axes(arr_a, arr_b, axes, operator.mul)
 
 
-def mn_mul(arr_a, arr_b):
+def mn_mul(arr_a: ndarray, arr_b: ndarray) -> ndarray:
+    """Given an (1 or m, 1 or n)-shaped array and an (m, n, theta, phi)-shaped
+    array, return an array where each (theta, phi) slice is multipled by the
+    value at (m,n).
+
+    Example:
+        >>> mn_mul(np.array([[1,2],[3,4]]), np.ones((2,2,1,1)))
+        array([[[[1.]],
+                [[2.]]],
+               [[[3.]],
+                [[4.]]]])
+        >>> mn_mul(np.array([[1,2]]), np.ones((2,2,1,1)))
+        array([[[[1.]],
+                [[2.]]],
+               [[[1.]],
+                [[2.]]]])
+        >>> mn_mul(np.array([[1],[2]]), np.ones((2,2,1,1)))
+        array([[[[1.]],
+                [[1.]]],
+               [[[2.]],
+                [[2.]]]])
+    """
     l = list(range(arr_b.ndim))
     axes = l[arr_a.ndim :] + l[: arr_a.ndim]
     return op_across_axes(arr_a, arr_b, axes, operator.mul)
 
 
-def update_arrays(p, cache):
+def update_arrays(p: dict[str, ArrayLike], cache: dict[str, ArrayLike]) -> None:
+    """Update cache with intermediary arrays to use for calculations.
+
+    This is a key method used to optimise calculations, with the primary
+    goal of limiting any cases where we might otherwise recalculate the same
+    array twice. All of the quantities cached here are used to calculate the
+    functions in compute_functions.
+
+    TODO: Add more detail here
+
+    Args:
+        p: The parameters to use to calculate the quantities. Only values
+            that depend on parameters which differ between `p` and
+            `cache['last_p']` will be calculated.
+        cache : Dictionary to update with the quantities.
+    """
     C = cache
     last_p = C.get("last_p")
     if not C:
-        C["vel"] = calc_velocity(p)
+        C["vel"] = calc_velocity(p["theta_array"], p["phi_array"], p["Vf"])
         C["vel_z"] = C["vel"][..., 2]
         C["vel_z_sq"] = C["vel_z"] ** 2
         C["dth_x_dphi_x_Nf_m"] = p["d_theta"] * p["d_phi"] * p["Nf_m"]
@@ -283,14 +417,19 @@ def update_arrays(p, cache):
 # @profile
 def compute_functions(functions, p, cache, result_only=False):
     """Compute a function. MORE DETAIL COULD HELP - MAYBE A BETTER NAME?
+
     - Calculates each function as a function of Vf, theta and phi
-    - Perfoms the integral by multiplying by sin(theta)
+    - Performs the integral by multiplying by sin(theta)
+
+    TODO: defo add more detail here
+
     Args:
         functions (list[str]): Functions to compute. Can include ("H", "A1", "A2", "G").
         p (dict[str:object]): parameters used for calculations.
         C (dict[str:xp.ndarray]): Arrays used for calculations.
     Returns:
-        dict[str:dict[str:xp.ndarray]]: Arrays of the functions in the format:
+        dict[str:dict[str:xp.ndarray]]: Arrays of the functions in the format::
+
             {
                 FUNCTION_NAME: {
                     "array": xp.ndarray[theta*phi],
@@ -425,34 +564,43 @@ def compute_functions(functions, p, cache, result_only=False):
     return all_arrays
 
 
-def calc_velocity(p):
+def calc_velocity(theta_array: ndarray, phi_array: ndarray, vf: float) -> ndarray:
     """Get velocity in x, y and z.
-
-    Args:
-        params (float): parameters.
 
     Returns:
         xp.ndarray[theta*phi*3]: x, y and z velocity.
     """
-    sin_theta_array = xp.sin(p["theta_array"])[:, xp.newaxis]
-    velocity = xp.full((len(p["theta_array"]), len(p["phi_array"]), 3), float(p["Vf"]))
-    velocity[..., 0] *= xp.cos(p["phi_array"]) * sin_theta_array
-    velocity[..., 1] *= xp.sin(p["phi_array"]) * sin_theta_array
-    velocity[..., 2] *= xp.cos(p["theta_array"])[:, xp.newaxis]
+    sin_theta_array = xp.sin(theta_array)[:, xp.newaxis]
+    velocity = xp.full((len(theta_array), len(phi_array), 3), float(vf))
+    velocity[..., 0] *= xp.cos(phi_array) * sin_theta_array
+    velocity[..., 1] *= xp.sin(phi_array) * sin_theta_array
+    velocity[..., 2] *= xp.cos(theta_array)[:, xp.newaxis]
     return velocity
 
 
-def ensure_numpy_array(obj):
+def ensure_numpy_array(obj: ndarray) -> ndarray:
+    """If `obj` is a cupy array, return a matching numpy array. Otherwise
+    return `obj`.
+    """
     if cp is not None and isinstance(obj, cp.ndarray):
         # get numpy array from cupy array
         return obj.get()
     return obj
 
 
-def get_epsilon_at_index(results, index):
+def get_epsilon_at_index(results, index: int) -> Tuple[ndarray, ...]:
+    """Calculate stuff.
+
+    TODO: Add proper description here.
+
+    Args:
+        results (results.ResultsBase): Results object.
+        index: Index at which to fetch the parameters.
+
+    Returns:
+        Tuple[ndarray, ...]: Values (in same order as EPSILON_FUNCTIONS)
+    """
     G = results.get_m_n_array_from_index("G", index)
-    # A1 = results.get_m_n_array_from_index("A1", index)
-    # A2 = results.get_m_n_array_from_index("A2", index)
     H = results.get_m_n_array_from_index("H", index)
 
     tau = results.get_param_at_index("tau", index)
@@ -464,32 +612,24 @@ def get_epsilon_at_index(results, index):
     G_plus = np.matrix(G[::2, ::2])
     G_minus = np.matrix(G[1::2, 1::2])
 
-    # A = A1 + A2
-    # A_plus = A[0::2, 0::2]
-    # A_minus = A[1::2, 1::2]
-
-    """
-    Create required arrays from output arrays
-    """
-    Z_plus = np.ones([np.shape(H_plus)[0]])
+    # Create required arrays from output arrays
+    Z_plus = np.ones([H_plus.shape[0]])
     Z_plus[0] = 1 / 2
     Z_plus_matrix = np.matrix(Z_plus).T
-    Z_minus = np.ones([np.shape(H_plus)[0]])
+    Z_minus = np.ones([H_plus.shape[0]])
     Z_minus_matrix = np.matrix(Z_minus).T
 
     G_vec_plus = np.matrix(G_plus[:, 0] * 2)
     G_vec_minus = np.matrix(G_minus[:, 0] / Z_minus)
 
-    Iden = np.identity(np.shape(H_plus)[0])
+    Iden = np.identity(H_plus.shape[0])
 
     iden_w_sq = np.matrix(Iden * w_bar**2)
 
     Hinvp = np.linalg.inv(iden_w_sq - H_plus)
     Hinvm = np.linalg.inv(iden_w_sq - H_minus)
 
-    """
-    Calculate epsilon
-    """
+    # Calculate epsilon
     epsp = (
         1 - G_vec_plus.T * Hinvp * Z_plus_matrix
     )  # The poles of this function give symmetric SPWs.
@@ -504,6 +644,45 @@ def get_epsilon_at_index(results, index):
     Fp = sign_p * np.exp(slog_p)
     Fm = sign_m * np.exp(slog_m)
 
+    # Calculating P tilde:
+    A1 = results.get_m_n_array_from_index("A1", index)
+    A2 = results.get_m_n_array_from_index("A2", index)
+    A = A1 - A2
+
+    L = results.get_param_at_index("L", index)
+
+    # A_plus = np.matrix(A[::2, ::2]).T
+    A_minus = np.matrix(A[1::2, 1::2]).T
+
+    chi_plus = np.array(np.linalg.inv(iden_w_sq - H_plus - G_vec_plus) * A_minus)
+    # chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)
+
+    # Defining constants
+    k = 2
+
+    # Inputting the dimensions of chi matrix
+    m_max, n_max = chi_plus.shape
+
+    # Calculating q_n and q_m
+    m = np.arange(m_max).reshape(-1, 1)
+    n = np.arange(n_max).reshape(1, -1)
+    q_m = np.pi * m / L
+    q_n = np.pi * n / L
+
+    # Calculating L_m
+    L_m = L / (2 - (m == 0).astype(int))
+
+    # Calculating P_n
+    exp_k_L = np.exp(-k * L)
+    P_n = np.zeros((1, n_max), dtype=results.get_dtype())
+    P_n[0, :] = (
+        chi_plus.T * ((1 - (-1) ** m * exp_k_L) / (L_m * (k**2 + q_m**2)))
+    ).sum(axis=0)
+
+    P_tilde = np.sum(
+        2 * np.pi * (k * P_n) / (k**2 + q_n**2) * (1 - (-1) ** n * exp_k_L)
+    )
+
     return (
         # It's critical that the order of the terms here matches the order
         # of EPSILON_FUNCTIONS.
@@ -511,4 +690,5 @@ def get_epsilon_at_index(results, index):
         epsm[0, 0],
         Fp,
         Fm,
+        P_tilde,
     )

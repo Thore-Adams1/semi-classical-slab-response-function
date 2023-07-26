@@ -6,8 +6,15 @@ import argparse
 import itertools
 from textwrap import dedent
 
+import scsr.cli.calc as tc
+
+DESC = """\
+This script accepts a scsr-calc command and generates a command
+to run each chunk. Slurm jobscripts can also be created for each chunk
+using `-J`.
+"""
 USAGE = """\
-'a'\ build_thesis_code_chunks.py [-h] [-J] [thesis_code.py args]
+scsr-build-chunked-jobscripts [-h] [-J] [args for scsr-calc]
 """
 jobscript = """\
 #!/bin/bash --login
@@ -33,7 +40,6 @@ module load python/3.7.0
 echo "RUNNING CODE:"
 {command}"""
 sys.path.append(os.path.dirname(__file__))
-import thesis_code as tc
 
 
 def get_unique_dir(pattern, start=1):
@@ -87,11 +93,15 @@ def validate_args(tc_args):
         raise ValueError("No chunks specified.")
 
 
-def main():
-    parser = argparse.ArgumentParser(usage=USAGE)
+def get_parser():
+    parser = argparse.ArgumentParser(description=DESC, usage=USAGE)
     parser.add_argument("-J", "--create-job-script", action="store_true")
+    return parser
+
+
+def main():
     given_args = sys.argv[1:]
-    args, given_args = parser.parse_known_args(given_args)
+    args, given_args = get_parser().parse_known_args(given_args)
     tc_parser = tc.get_parser()
     tc_args = tc_parser.parse_args(list(given_args))
     tc.set_arg_defaults(tc_args)
@@ -158,12 +168,12 @@ def main():
                     gpu_commands=gpu_commands,
                     chunks_sbatch=chunks_config,
                     max_days=1 if tc_args.gpu else 3,
-                    log_dir=log_dir
+                    log_dir=log_dir,
                 )
             )
         print(
             "To run the jobscripts, run the following command:\n\n{}".format(
-                "sbatch --account=scw1772 {}".format(
+                "sbatch --account=[ACCOUNT] {}".format(
                     job_script_path.replace("\\", "\\\\")
                 )
             )

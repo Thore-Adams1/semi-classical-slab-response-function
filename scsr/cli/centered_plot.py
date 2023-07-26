@@ -10,20 +10,20 @@ import pipes
 
 import numpy as np
 
-import thesis_code as tc
+from . import calc as tc
 
 # Globals
 USAGE = """\
-centered_plot.py [-h] SCRIPT [-ws OMEGA_STEPS] [-o OUTPUT] [thesis_code.py args]
+centered_plot.py [-h] SCRIPT [-ws OMEGA_STEPS] [-o OUTPUT] [scsr-calc args]
 """
 REQUIRED_CONSTANTS = ["L", "tau"]
 
 
-def main():
+def get_parser():
     parser = argparse.ArgumentParser(usage=USAGE, description=__doc__)
     parser.add_argument(
         "script",
-        choices=("thesis_code.py", "build_thesis_code_chunks.py"),
+        choices=("scsr-calc", "scsr-build-chunked-jobscripts"),
         help="The script to generate commands for.",
     )
     parser.add_argument(
@@ -39,12 +39,16 @@ def main():
         default="centered/output_{w}_Kx_{Kx}.pkl",
         help="Output pkl paths pattern. Use {w} for w_plus / w_minus and {Kx} for the corresponding Kx value. (Default: 'centered/output_{w}_Kx_{Kx}.pkl')",
     )
+    return parser
+
+
+def main():
     given_args = sys.argv[1:]
-    args, given_args = parser.parse_known_args(given_args)
+    args, given_args = get_parser().parse_known_args(given_args)
     tc_parser = tc.get_parser()
     tc_args, remainder_args = tc_parser.parse_known_args(list(given_args))
-    if args.script == "build_thesis_code_chunks.py":
-        from build_thesis_code_chunks import validate_args
+    if args.script == "scsr-build-chunked-jobscripts":
+        from .build_chunked_jobscripts import validate_args
 
         validate_args(tc_args)
 

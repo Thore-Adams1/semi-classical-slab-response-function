@@ -102,11 +102,11 @@ def ensure_pickle_arrays_virtually_identical(
     return result
 
 
-if __name__ == "__main__":
+def get_parser():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Check whether two pickles from thesis_code.py match."
+        description="Check whether two pickles from scsr-calc match."
     )
     parser.add_argument("pickle_path", type=str, help="path to pickle file")
     parser.add_argument(
@@ -118,6 +118,10 @@ if __name__ == "__main__":
         action="store_true",
         help="only check arrays, not parameters",
     )
+    return parser
 
-    args = parser.parse_args()
+
+if __name__ == "__main__":
+
+    args = get_parser().parse_args()
     ensure_pickle_arrays_virtually_identical(args.pickle_path, args.other_pickle_path)

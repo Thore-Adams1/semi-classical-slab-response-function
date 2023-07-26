@@ -3,22 +3,11 @@
 # Standard
 import argparse
 import pickle
-import itertools
 import os
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import datetime
-from re import L
-
-# Third party
-import numpy as np
-from tqdm import tqdm
-import matplotlib.ticker as tck
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from numpy.linalg import inv, det
 
 # Local
-from scsr.plots import generate_plots, write_plots_from_plots_pickle
+from ..plots import generate_plots, write_plots_from_plots_pickle
 
 """
 run:
@@ -27,7 +16,8 @@ for information
 """
 
 
-def main(args):
+def main():
+    args = get_parser().parse_args()
     if args.plot_pickle:
         print("Loading results object for {}".format(args.plot_pickle))
         with open(args.plot_pickle, "rb") as f:
@@ -104,4 +94,4 @@ def get_parser():
 
 
 if __name__ == "__main__":
-    main(get_parser().parse_args())
+    main()

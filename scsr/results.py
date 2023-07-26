@@ -80,7 +80,7 @@ class ResultsBase:
     def update_metadata(self, result_dict):
         meta = result_dict.get("metadata")
         if meta is None:
-            meta = result_dict.get("details",{})
+            meta = result_dict.get("details", {})
         args = result_dict.get("args")
         if args is not None:
             meta["parsed_args"] = args
@@ -94,10 +94,10 @@ class ResultsBase:
         if all_chunks:
             params = list(itertools.chain.from_iterable(parsed_args["params"]))
         else:
-            arg_params = {k for k,v in
-                itertools.chain.from_iterable(parsed_args["params"])
+            arg_params = {
+                k for k, v in itertools.chain.from_iterable(parsed_args["params"])
             }
-            params = [(k,v) for k,v in self.parameters.items() if k in arg_params]
+            params = [(k, v) for k, v in self.parameters.items() if k in arg_params]
         if params:
             param_fmt = lambda v: (
                 ",".join(str(i) for i in v) if hasattr(v, "__getitem__") else f"{v:g}"
@@ -112,15 +112,16 @@ class ResultsBase:
         else:
             variable_params = self.variable_params.items()
         v_args = []
-        for k,v in variable_params:
+        for k, v in variable_params:
             vparam_fmt = lambda v: (
-                ",".join(str(i) for i in v) if len(v) < 3 else f"{v[0]}:{v[-1]}:{len(v)}"
+                ",".join(str(i) for i in v)
+                if len(v) < 3
+                else f"{v[0]}:{v[-1]}:{len(v)}"
             )
             if len(v) > 3:
                 v_args.append(f"{k}={vparam_fmt(v)}")
         return p_args, v_args
 
-    
     def get_param_args(self, all_chunks=False):
         p_args, v_args = self.reconstruct_readable_param_args(all_chunks=all_chunks)
         args = []
@@ -129,11 +130,6 @@ class ResultsBase:
         if v_args:
             args.extend(["-v"] + v_args)
         return args
-
-
-
-                
-
 
 
 class Results(ResultsBase):
@@ -150,6 +146,10 @@ class Results(ResultsBase):
 
     def get_pickle_type(self):
         return PickleType.M_N_ARRAYS
+
+    def get_dtype(self):
+        dtype_bits = self.metadata.get("parsed_args", {}).get("dtype", 128)
+        return getattr(np, f"complex{dtype_bits}")
 
     def get_m_n_array_from_values(self, function, iteration_params):
         index = tuple(
@@ -202,10 +202,10 @@ class ChunkedResults(Results):
         p_args, v_args = self.reconstruct_readable_param_args()
         return "<{}: {}, {}, {}/{}>".format(
             self.__class__.__name__,
-            ' '.join(p_args),
-            ' '.join(v_args),
+            " ".join(p_args),
+            " ".join(v_args),
             self.chunked_param,
-            len(self.results)
+            len(self.results),
         )
 
     def _reconstruct_chunks(self, results):
@@ -232,7 +232,11 @@ class ChunkedResults(Results):
                         chunked_param = param_name
                     else:
                         if chunked_param != param_name:
-                            raise ValueError("Cannot parse chunks on multiple axes.")
+                            raise ValueError(
+                                "Cannot parse chunks on multiple axes. "
+                                f"result {i+1}/{len(results)} has unique {param_name} "
+                                f"whereas chunks were expected on {chunked_param}"
+                            )
             if chunked_param is None:
                 raise ValueError("No chunked parameters found.")
         variable_params[chunked_param] = []
@@ -330,6 +334,7 @@ class ResultsProcessor(ProcessorBase):
         return (self.iteration_total * len(self.functions)) * maths.xp.dtype(
             self.dtype
         ).itemsize
+
     def reserve_memory(self):
         """reserve memory for the arrays.
 
@@ -470,9 +475,7 @@ class PlotIterator:
 
     def _iter(self):
         results, axes = self.results, self.axes
-        src_key_params = {
-            p: results.parameters[p] for p in results.parameters
-        }
+        src_key_params = {p: results.parameters[p] for p in results.parameters}
         axes_i = (
             results.variable_param_indices[axes[0]],
             results.variable_param_indices[axes[1]],

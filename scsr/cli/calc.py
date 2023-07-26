@@ -1,38 +1,43 @@
 #! /usr/bin/env python3
-"""This script computes H, G, A1 and A2 electron dynamics matrices
+DESC = """This script computes H, G, A1 and A2 electron dynamics matrices
 
-Usage:
-    -p [parameters] -v [variables]
+Examples:
 
-    Run A2 & G with 200 steps:
-      python thesis_code.py A2 G -p steps=200
+Run A2 & G with 200 steps:
+    
+    scsr-calc A2 G -p steps=200
 
-    Run A2 & G with multiprocessing, with 200 steps and lc = 4 and Kx = (0,1,2,3):
-      python thesis_code.py A2 G -p lc=4 steps=200 -x -v Kx=0:3
+Run A2 & G with multiprocessing, with 200 steps and lc = 4 and Kx = (0,1,2,3):
+    
+    scsr-calc A2 G -p lc=4 steps=200 -x -v Kx=0:3
 
-    Run A2 & G with multiprocessing, with 200 steps for 6 equally-spaced w.
-    w values from 0-3:
-      python thesis_code.py A2 G -p steps=200 -x -v w=0:3:6
+Run A2 & G with multiprocessing, with 200 steps for 6 equally-spaced w.
+w values from 0-3:
+    
+    scsr-calc A2 G -p steps=200 -x -v w=0:3:6
 
-    Run A2 & G with 100 steps, then write to file:
-      python thesis_code.py A2 G -p steps=100 -w
+Run A2 & G with 100 steps, then write to file:
+    
+    scsr-calc A2 G -p steps=100 -w
 
-    Run A2 & G with 100 steps, then write to file called "A2_G_100_steps.pkl"
-      python thesis_code.py A2 G -p steps=100 -w -o A2_G_100_steps.pkl
+Run A2 & G with 100 steps, then write to file called "A2_G_100_steps.pkl"
+    
+    scsr-calc A2 G -p steps=100 -w -o A2_G_100_steps.pkl
 
 Output:
-    Files are written as python pickles. Pickles can be read from a new python 
-    session using:
+Files are written as python pickles. Pickles can be read from a new python 
+session using:
 
-        import pickle
-        result = pickle.load(open('output.pkl', 'rb'))
+    import pickle
+    result = pickle.load(open('output.pkl', 'rb'))
 
-    Or, more conveniently, using the `scsr.results.load_results` function,
-    which returns a results object corresponding to the type of pickle. It 
-    expects a list of 1 (or more, if chunking is used) pickle path(s):
+Or, more conveniently, using the `scsr.results.load_results` function,
+which returns a results object corresponding to the type of pickle. It 
+expects a list of 1 (or more, if chunking is used) pickle path(s), as it
+also deals with compiling results from chunked `scsr-calc` commands:
 
-        from scsr.results import load_results
-        results = load_results(['out.1.pkl', 'out.2.pkl'])
+    from scsr.results import load_results
+    results = load_results(['out.1.pkl', 'out.2.pkl'])
 """
 # Standard
 import ast
@@ -81,7 +86,9 @@ PARAM_DESCRIPTIONS = {
     "theta_max": "The maximum value of theta.",
     "phi_max": "The maximum value of phi.",
     "max_tile_size": (
-        "The max size of the tile of a m by n function matrix to compute \n" "at once."
+        "The max size of the tile of a m by n function matrix to compute \n"
+        "at once. Default is (2,2), but you may get significant performance \n"
+        "boosts if you increase this - especially in GPU mode."
     ),
     "mp_batch_size": (
         "The number of function arrays to process before sending them to\n"
@@ -196,8 +203,10 @@ def process_chunks(params, functions, chunk_size, cache):
 
 
 # @profile
-def main(args):
-    """Main function."""
+def main():
+    args = get_parser().parse_args()
+    set_arg_defaults(args)
+
     start_time = datetime.datetime.now()
 
     gpus_to_use = []
@@ -385,7 +394,7 @@ def main(args):
     results_dict = result_proc.as_dict()
     results_dict["args"] = vars(args)
     processing_time = datetime.datetime.now() - start_time
-    results_dict["details"] = {"runtime": processing_time, "cli_args": sys.argv}
+    results_dict["metadata"] = {"runtime": processing_time, "cli_args": sys.argv}
     print("--- Processing time: {} ---".format(processing_time))
     if args.write:
         output_path = args.output or "results/output.pkl"
@@ -533,22 +542,20 @@ def variable_param_type(string):
 
 
 def get_parser():
-    indent_trailing = lambda text: f"{text}".replace("\n", f"\n\t\t")
+    # indent_trailing = lambda text: f"{text}".replace("\n", f"\n\t\t")
     param_descs = PARAM_DESCRIPTIONS.copy()
     all_params = set(KNOWN_PARAMS) | set(PARAM_DEFAULTS)
     no_desc = set()
     for param in all_params:
         if param not in param_descs:
             no_desc.add(param)
-    no_desc_text = f"{', '.join(no_desc)}\n\t"
-    param_text = "Parameters:\n\t{}{}".format(
+    no_desc_text = ", ".join(f"`{p}`" for p in no_desc)
+    param_text = "# Parameters:\n\n{}\n\n{}".format(
         no_desc_text,
-        "\n\t".join(
-            f"{param}: {indent_trailing(param_descs[param])}" for param in param_descs
-        ),
+        "\n".join(f"* `{param}`: {param_descs[param]}" for param in param_descs),
     )
     parser = argparse.ArgumentParser(
-        description=f"{__doc__}\n{param_text}",
+        description=f"{DESC}\n{param_text}",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     inputs_group = parser.add_argument_group("Inputs")
@@ -745,6 +752,4 @@ def tile_2d_arr(width, height, max_width, max_height):
 
 
 if __name__ == "__main__":
-    arguments = get_parser().parse_args()
-    set_arg_defaults(arguments)
-    main(arguments)
+    main()

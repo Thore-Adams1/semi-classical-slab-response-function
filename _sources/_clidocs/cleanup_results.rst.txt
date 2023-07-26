@@ -1,0 +1,8 @@
+``scsr-cleanup-results``
+===================================
+
+.. argparse::
+   :module: scsr.cli.cleanup_results
+   :func: get_parser
+   :prog: scsr-cleanup-results
+   :markdownhelp:

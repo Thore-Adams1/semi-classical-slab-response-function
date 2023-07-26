@@ -1,0 +1,8 @@
+``scsr-pickle-diff``
+===================================
+
+.. argparse::
+   :module: scsr.cli.pickle_diff
+   :func: get_parser
+   :prog: scsr-pickle-diff
+   :markdownhelp:

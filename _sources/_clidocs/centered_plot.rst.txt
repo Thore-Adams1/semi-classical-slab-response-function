@@ -1,0 +1,8 @@
+``scsr-centered-plot``
+===================================
+
+.. argparse::
+   :module: scsr.cli.centered_plot
+   :func: get_parser
+   :prog: scsr-centered-plot
+   :markdownhelp:

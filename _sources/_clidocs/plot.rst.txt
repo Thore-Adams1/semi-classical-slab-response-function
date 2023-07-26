@@ -1,0 +1,8 @@
+``scsr-plot``
+===================================
+
+.. argparse::
+   :module: scsr.cli.plot
+   :func: get_parser
+   :prog: scsr-plot
+   :markdownhelp:

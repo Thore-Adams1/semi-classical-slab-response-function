@@ -1,0 +1,7 @@
+SCSR API
+========
+
+.. toctree::
+   :maxdepth: 4
+
+   scsr

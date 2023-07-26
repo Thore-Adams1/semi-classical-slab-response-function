@@ -1,0 +1,8 @@
+``scsr-calc``
+===================================
+
+.. argparse::
+   :module: scsr.cli.calc
+   :func: get_parser
+   :prog: scsr-calc
+   :markdownhelp:

@@ -1,0 +1,8 @@
+``scsr-build-chunked-jobscripts``
+===================================
+
+.. argparse::
+   :module: scsr.cli.build_chunked_jobscripts
+   :func: get_parser
+   :prog: scsr-build-chunked-jobscripts
+   :markdownhelp:

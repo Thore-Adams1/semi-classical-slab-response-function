@@ -1,0 +1,8 @@
+``scsr-validate-pickle``
+===================================
+
+.. argparse::
+   :module: scsr.cli.validate_pickle
+   :func: get_parser
+   :prog: scsr-validate-pickle
+   :markdownhelp:

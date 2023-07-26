@@ -10,7 +10,7 @@ jobs:
       - uses: actions/setup-python@v3
       - name: Install dependencies
         run: |
-          pip install -r requirements-docs.txt
+          pip install -r requirements-docs.txt && pip install -r requirements.txt
       - name: Sphinx apidocs
         run: |
           python doc/build.py

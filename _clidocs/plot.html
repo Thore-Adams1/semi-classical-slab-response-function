@@ -56,7 +56,10 @@
 <li class="toctree-l1"><a class="reference internal" href="centered_plot.html"><code class="docutils literal notranslate"><span class="pre">scsr-centered-plot</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="cleanup_results.html"><code class="docutils literal notranslate"><span class="pre">scsr-cleanup-results</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pickle_diff.html"><code class="docutils literal notranslate"><span class="pre">scsr-pickle-diff</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-plot</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-plot</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="validate_pickle.html"><code class="docutils literal notranslate"><span class="pre">scsr-validate-pickle</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Documentation:</span></p>
@@ -91,6 +94,47 @@
              
   <section id="scsr-plot">
 <h1><code class="docutils literal notranslate"><span class="pre">scsr-plot</span></code><a class="headerlink" href="#scsr-plot" title="Permalink to this heading"></a></h1>
+<p>plot the results from the thing bla</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">scsr</span><span class="o">-</span><span class="n">plot</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span> <span class="n">AXES</span> <span class="n">AXES</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">xl</span> <span class="n">AXIS_LABELS</span> <span class="n">AXIS_LABELS</span><span class="p">]</span>
+                 <span class="p">(</span><span class="o">-</span><span class="n">r</span> <span class="n">path</span> <span class="p">[</span><span class="n">path</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="o">-</span><span class="n">p</span> <span class="n">path</span><span class="p">)</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">path</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">FIGS_DIR</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">k</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="named-arguments">
+<h2>Named Arguments<a class="headerlink" href="#named-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>-x, --axes</kbd></dt>
+<dd><p>Axes to plot. Default: w Kx</p>
+<p>Default: [’w’, ‘Kx’]</p>
+</dd>
+<dt><kbd>-xl, --axis-labels</kbd></dt>
+<dd><p>Axes labels. Default: \omega K</p>
+<p>Default: [’\omega’, ‘K’]</p>
+</dd>
+<dt><kbd>-r, --result-pickles</kbd></dt>
+<dd><p>Pickle files with results. If multiple are given, will attempt to combine</p>
+</dd>
+<dt><kbd>-p, --plot-pickle</kbd></dt>
+<dd><p>Pickle files with plots.</p>
+</dd>
+<dt><kbd>-o, --output-pkl</kbd></dt>
+<dd><p>Where to save pickle files with plots. Defaults to a unique path in the current directory.</p>
+</dd>
+<dt><kbd>-f, --force</kbd></dt>
+<dd><p>Overwrite pickle file if it exists.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>-d, --figs-dir</kbd></dt>
+<dd><p>Directory in which to store figures. Defaults to a timestamped
+‘./figs/[DATE]_[TIME]’ directory</p>
+</dd>
+<dt><kbd>-k, --skip-plotting</kbd></dt>
+<dd><p>Skip plotting the figures. Useful if you just want to save the plots
+to a plot pickle.</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
 </section>
 
 

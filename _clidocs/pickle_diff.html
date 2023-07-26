@@ -55,7 +55,11 @@
 <li class="toctree-l1"><a class="reference internal" href="calc.html"><code class="docutils literal notranslate"><span class="pre">scsr-calc</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="centered_plot.html"><code class="docutils literal notranslate"><span class="pre">scsr-centered-plot</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="cleanup_results.html"><code class="docutils literal notranslate"><span class="pre">scsr-cleanup-results</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-pickle-diff</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-pickle-diff</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="plot.html"><code class="docutils literal notranslate"><span class="pre">scsr-plot</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="validate_pickle.html"><code class="docutils literal notranslate"><span class="pre">scsr-validate-pickle</span></code></a></li>
 </ul>
@@ -91,6 +95,30 @@
              
   <section id="scsr-pickle-diff">
 <h1><code class="docutils literal notranslate"><span class="pre">scsr-pickle-diff</span></code><a class="headerlink" href="#scsr-pickle-diff" title="Permalink to this heading"></a></h1>
+<p>Check whether two pickles from scsr-calc match.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">scsr</span><span class="o">-</span><span class="n">pickle</span><span class="o">-</span><span class="n">diff</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">A</span><span class="p">]</span> <span class="n">pickle_path</span> <span class="n">other_pickle_path</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h2>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>pickle_path</kbd></dt>
+<dd><p>path to pickle file</p>
+</dd>
+<dt><kbd>other_pickle_path</kbd></dt>
+<dd><p>path to another pickle file</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h2>Named Arguments<a class="headerlink" href="#named-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>-A, --arrays-only</kbd></dt>
+<dd><p>only check arrays, not parameters</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</section>
 </section>
 
 

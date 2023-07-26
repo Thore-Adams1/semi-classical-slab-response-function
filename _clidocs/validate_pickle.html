@@ -57,7 +57,11 @@
 <li class="toctree-l1"><a class="reference internal" href="cleanup_results.html"><code class="docutils literal notranslate"><span class="pre">scsr-cleanup-results</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="pickle_diff.html"><code class="docutils literal notranslate"><span class="pre">scsr-pickle-diff</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="plot.html"><code class="docutils literal notranslate"><span class="pre">scsr-plot</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-validate-pickle</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">scsr-validate-pickle</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#positional-arguments">Positional Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#named-arguments">Named Arguments</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Documentation:</span></p>
 <ul>
@@ -91,6 +95,37 @@
              
   <section id="scsr-validate-pickle">
 <h1><code class="docutils literal notranslate"><span class="pre">scsr-validate-pickle</span></code><a class="headerlink" href="#scsr-validate-pickle" title="Permalink to this heading"></a></h1>
+<p>Compare pickled results with results from the matlab code.</p>
+<p>Note: The following two environment variables must be set:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">$MATLAB_EXECUTABLE</span></code>:
+The path to the matlab executable on your machine. For example
+<code class="code docutils literal notranslate"><span class="pre">/usr/local/bin/matlab</span></code> or <code class="code docutils literal notranslate"><span class="pre">C:/Program</span> <span class="pre">Files/MATLAB/R2022a/bin/matlab.exe</span></code>.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">$MATLAB_SCRIPTS_PATH</span></code>:
+The path to directory containing original logic for this code. This
+directory must include <code class="code docutils literal notranslate"><span class="pre">get_matelement.m</span></code> and dependent
+files.</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">scsr</span><span class="o">-</span><span class="n">validate</span><span class="o">-</span><span class="n">pickle</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="n">pickle_files</span> <span class="p">[</span><span class="n">pickle_files</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="positional-arguments">
+<h2>Positional Arguments<a class="headerlink" href="#positional-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>pickle_files</kbd></dt>
+<dd><p>Pickle files with results. If multiple are given, will attempt to combine them into a single results object.</p>
+</dd>
+</dl>
+</section>
+<section id="named-arguments">
+<h2>Named Arguments<a class="headerlink" href="#named-arguments" title="Permalink to this heading"></a></h2>
+<dl class="option-list">
+<dt><kbd>-v, --verbose</kbd></dt>
+<dd><p>Print more information</p>
+<p>Default: 0</p>
+</dd>
+</dl>
+</section>
 </section>
 
 

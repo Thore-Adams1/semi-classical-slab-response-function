@@ -36,6 +36,18 @@ All exectutable files will be documented if they have a submodule within
 ``scsr/cli`` (and each must have a ``get_parser()`` method which returns an 
 ``argparse.ArgumentParser``)
 
+
+Adding LaTeX Maths
+------------------
+
+We use the ``sphinx.exr.mathjax`` extension to render maths in the documentation.
+This allows for inline :math:`\LaTeX` and multiline blocks:
+
+.. math::
+
+    Look\,at\,this\,awesome\,\LaTeX\,block!
+
+
 Building the Documentation (Locally)
 ------------------------------------
 

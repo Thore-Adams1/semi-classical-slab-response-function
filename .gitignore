@@ -1,6 +1,6 @@
 __pycache__
 debug/
-__*.py
+.vscode
 # thesis_code.py Results
 *.pkl
 results*
@@ -11,4 +11,5 @@ figs
 # Profiling results
 *.lprof
 *.prof
+# Documentation
 doc/_*

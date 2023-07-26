@@ -13,18 +13,12 @@ Welcome to Semi Classical Slab Response Function's documentation!
 
    usage/*
 
-CLI Documentation
-=================
-
 .. toctree::
    :maxdepth: 1
    :caption: CLI Documentation:
    :glob:
 
    _clidocs/*
-
-API Documentation
-=================
 
 .. toctree::
    :maxdepth: 1
@@ -36,8 +30,14 @@ API Documentation
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Source Code
+-----------
+
+The source code is available `on GitHub <https://github.com/Spraill/semi-classical-slab-response-function>`_.

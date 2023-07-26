@@ -664,7 +664,7 @@ def get_parser():
     output_group.add_argument(
         "-u",
         "--min-update-interval",
-        default=0,
+        default=0.05,
         type=float,
         help="Min interval (seconds) between progress bar updates.",
         metavar="seconds",
@@ -688,7 +688,7 @@ def get_parser():
         "--chunk-id",
         type=int,
         default=None,
-        help="Chunk id. (from 1 to --chunks)",
+        help="Chunk id. (from 1 to `--chunks`)",
     )
     return parser
 

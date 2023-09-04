@@ -11,11 +11,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=e160b93e"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -44,9 +44,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../usage/01_running_calculations.html">Running Calculations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/02_loading_results.html">Loading Results</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/03_running_tests.html">Running Tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/99_maintaining_docs.html">Writing Documentation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">CLI Documentation:</span></p>
@@ -97,7 +94,7 @@
            <div itemprop="articleBody">
              
   <section id="scsr-calc">
-<h1><code class="docutils literal notranslate"><span class="pre">scsr-calc</span></code><a class="headerlink" href="#scsr-calc" title="Permalink to this heading"></a></h1>
+<h1><code class="docutils literal notranslate"><span class="pre">scsr-calc</span></code><a class="headerlink" href="#scsr-calc" title="Link to this heading"></a></h1>
 <p>This script computes H, G, A1 and A2 electron dynamics matrices</p>
 <p>Examples:</p>
 <p>Run A2 &amp; G with 200 steps:</p>
@@ -137,8 +134,8 @@ also deals with compiling results from chunked <code class="code docutils litera
 </pre></div>
 </div>
 <section id="Parameters:">
-<h2>Parameters:<a class="headerlink" href="#Parameters:" title="Permalink to this heading"></a></h2>
-<p><code class="code docutils literal notranslate"><span class="pre">L</span></code>, <code class="code docutils literal notranslate"><span class="pre">tau</span></code>, <code class="code docutils literal notranslate"><span class="pre">lc</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="code docutils literal notranslate"><span class="pre">Vf</span></code>, <code class="code docutils literal notranslate"><span class="pre">P</span></code>, <code class="code docutils literal notranslate"><span class="pre">w</span></code>, <code class="code docutils literal notranslate"><span class="pre">Nf_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ln</span></code>, <code class="code docutils literal notranslate"><span class="pre">wp</span></code></p>
+<h2>Parameters:<a class="headerlink" href="#Parameters:" title="Link to this heading"></a></h2>
+<p><code class="code docutils literal notranslate"><span class="pre">w</span></code>, <code class="code docutils literal notranslate"><span class="pre">tau</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ln</span></code>, <code class="code docutils literal notranslate"><span class="pre">Nf_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">lc</span></code>, <code class="code docutils literal notranslate"><span class="pre">Vf</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="code docutils literal notranslate"><span class="pre">P</span></code>, <code class="code docutils literal notranslate"><span class="pre">wp</span></code>, <code class="code docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="code docutils literal notranslate"><span class="pre">L</span></code></p>
 <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">steps</span></code>: The number of discrete steps in theta/phi axes. (The theta by phi
 grid is steps^2).</p></li>
@@ -156,16 +153,16 @@ the main thread (No need to adjust).</p></li>
                  <span class="p">[</span><span class="o">-</span><span class="n">g</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">G</span> <span class="n">GPU_IDS</span> <span class="p">[</span><span class="n">GPU_IDS</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="o">-</span><span class="n">A</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">SUBPROCESS_COUNT</span><span class="p">]</span>
                  <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">E</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span> <span class="n">seconds</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">C</span> <span class="n">CHUNKS</span><span class="p">]</span>
                  <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">CHUNK_PARAMETER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">I</span> <span class="n">CHUNK_ID</span><span class="p">]</span>
-                 <span class="p">[{</span><span class="n">A1</span><span class="p">,</span><span class="n">G</span><span class="p">,</span><span class="n">H</span><span class="p">,</span><span class="n">A2</span><span class="p">}</span> <span class="o">...</span><span class="p">]</span>
+                 <span class="p">[{</span><span class="n">G</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">H</span><span class="p">}</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="inputs">
-<h2>Inputs<a class="headerlink" href="#inputs" title="Permalink to this heading"></a></h2>
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading"></a></h2>
 <dl class="option-list">
 <dt><kbd>functions</kbd></dt>
-<dd><p>Possible choices: A1, G, H, A2</p>
+<dd><p>Possible choices: G, A1, A2, H</p>
 <p>Functions.</p>
-<p>Default: {’A1’, ‘G’, ‘H’, ‘A2’}</p>
+<p>Default: {’G’, ‘A1’, ‘A2’, ‘H’}</p>
 </dd>
 <dt><kbd>-p, --params</kbd></dt>
 <dd><p>Parameters to override. space-separated list of ‘[PARAM]=[VALUE]’ pairs.</p>
@@ -187,7 +184,7 @@ number of steps</p>
 </dl>
 </section>
 <section id="processing">
-<h2>Processing<a class="headerlink" href="#processing" title="Permalink to this heading"></a></h2>
+<h2>Processing<a class="headerlink" href="#processing" title="Link to this heading"></a></h2>
 <dl class="option-list">
 <dt><kbd>-x, --use-subprocesses</kbd></dt>
 <dd><p>Use subprocesses.</p>
@@ -212,7 +209,7 @@ per GPU in use.</p>
 </dl>
 </section>
 <section id="output">
-<h2>Output<a class="headerlink" href="#output" title="Permalink to this heading"></a></h2>
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading"></a></h2>
 <dl class="option-list">
 <dt><kbd>-w, --write</kbd></dt>
 <dd><p>Write a pickle file with the resultant array.</p>
@@ -237,7 +234,7 @@ by default.</p>
 </dl>
 </section>
 <section id="chunking">
-<h2>Chunking<a class="headerlink" href="#chunking" title="Permalink to this heading"></a></h2>
+<h2>Chunking<a class="headerlink" href="#chunking" title="Link to this heading"></a></h2>
 <dl class="option-list">
 <dt><kbd>-C, --chunks</kbd></dt>
 <dd><p>Number of chunks.</p>

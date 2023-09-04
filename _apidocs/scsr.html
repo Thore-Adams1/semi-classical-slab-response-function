@@ -11,11 +11,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=e160b93e"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,9 +43,6 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../usage/01_running_calculations.html">Running Calculations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/02_loading_results.html">Loading Results</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../usage/03_running_tests.html">Running Tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../usage/99_maintaining_docs.html">Writing Documentation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">CLI Documentation:</span></p>
@@ -188,15 +185,15 @@
            <div itemprop="articleBody">
              
   <section id="scsr-package">
-<h1>scsr package<a class="headerlink" href="#scsr-package" title="Permalink to this heading"></a></h1>
+<h1>scsr package<a class="headerlink" href="#scsr-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
 <section id="module-scsr.maths">
-<span id="scsr-maths-module"></span><h2>scsr.maths module<a class="headerlink" href="#module-scsr.maths" title="Permalink to this heading"></a></h2>
+<span id="scsr-maths-module"></span><h2>scsr.maths module<a class="headerlink" href="#module-scsr.maths" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.calc_velocity">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">calc_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.calc_velocity" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">calc_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.calc_velocity" title="Link to this definition"></a></dt>
 <dd><p>Get velocity in x, y and z.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -210,23 +207,18 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.cartesian_product">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">cartesian_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.cartesian_product" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">cartesian_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">arrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_2d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.cartesian_product" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.chunk_indices">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">chunk_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.chunk_indices" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">chunk_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.chunk_indices" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.compute_functions">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">compute_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.compute_functions" title="Permalink to this definition"></a></dt>
-<dd><p>Compute a function. MORE DETAIL COULD HELP - MAYBE A BETTER NAME?</p>
-<ul class="simple">
-<li><p>Calculates each function as a function of Vf, theta and phi</p></li>
-<li><p>Performs the integral by multiplying by sin(theta)</p></li>
-</ul>
-<p>TODO: defo add more detail here</p>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">compute_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.compute_functions" title="Link to this definition"></a></dt>
+<dd><p>Computes the relevant H,G,A1,A2 matrices with the inclusion of the Fuchs specularity parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -256,14 +248,14 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.ensure_numpy_array">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">ensure_numpy_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.ensure_numpy_array" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">ensure_numpy_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.ensure_numpy_array" title="Link to this definition"></a></dt>
 <dd><p>If <cite>obj</cite> is a cupy array, return a matching numpy array. Otherwise
 return <cite>obj</cite>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.get_epsilon_at_index">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scsr.maths.get_epsilon_at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scsr.maths.get_epsilon_at_index" title="Link to this definition"></a></dt>
 <dd><p>Calculate stuff.</p>
 <p>TODO: Add proper description here.</p>
 <dl class="field-list simple">
@@ -284,7 +276,7 @@ return <cite>obj</cite>.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.mn_mul">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">mn_mul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.mn_mul" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">mn_mul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.mn_mul" title="Link to this definition"></a></dt>
 <dd><p>Given an (1 or m, 1 or n)-shaped array and an (m, n, theta, phi)-shaped
 array, return an array where each (theta, phi) slice is multipled by the
 value at (m,n).</p>
@@ -310,13 +302,13 @@ value at (m,n).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.mul_axes">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">mul_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.mul_axes" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">mul_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.mul_axes" title="Link to this definition"></a></dt>
 <dd><p>Alias for <cite>op_across_axes(arr_a, arr_b, axes, operator.mul)</cite></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.op_across_axes">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">op_across_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.op_across_axes" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">op_across_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.op_across_axes" title="Link to this definition"></a></dt>
 <dd><p>Perform operation on two arrays along the given axes.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">arr_a</span><span class="p">,</span> <span class="n">arr_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]]])</span>
@@ -334,13 +326,13 @@ value at (m,n).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.sadd">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">sadd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.sadd" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">sadd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.sadd" title="Link to this definition"></a></dt>
 <dd><p>Alias for <cite>stack_op(arr_a, arr_b, operator.add)</cite></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.set_gpu_mode">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">set_gpu_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.set_gpu_mode" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">set_gpu_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.set_gpu_mode" title="Link to this definition"></a></dt>
 <dd><p>Set whether to use GPU or not.</p>
 <p>This sets the <cite>xp</cite> global within the maths module to the <cite>cupy</cite>
 module, rather than numpy as it is by default.</p>
@@ -356,13 +348,13 @@ memory.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.smul">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">smul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.smul" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">smul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.smul" title="Link to this definition"></a></dt>
 <dd><p>Alias for <cite>stack_op(arr_a, arr_b, operator.mul)</cite></p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.stack_broadcast">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">stack_broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.stack_broadcast" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">stack_broadcast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.stack_broadcast" title="Link to this definition"></a></dt>
 <dd><p>Given arr_a (with n dims) and arr_b (with m dims), return a new array with
 n+m dims, with arr_b broadcast across on every new leading axis.</p>
 <p class="rubric">Example</p>
@@ -377,7 +369,7 @@ n+m dims, with arr_b broadcast across on every new leading axis.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.stack_op">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">stack_op</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.stack_op" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">stack_op</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#scsr.maths.stack_op" title="Link to this definition"></a></dt>
 <dd><p>Given arr_a (with x dims) and arr_b (with y dims), return a new array with
 x+y dims, where each axis is a combination of an arr_a value and an arr_b
 value.</p>
@@ -393,7 +385,7 @@ value.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.tile_2d_arr">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">tile_2d_arr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scsr.maths.tile_2d_arr" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">tile_2d_arr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#scsr.maths.tile_2d_arr" title="Link to this definition"></a></dt>
 <dd><p>Yields tile dimensions of tiles of an array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -435,13 +427,12 @@ value.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.update_arrays">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">update_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scsr.maths.update_arrays" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">update_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ArrayLike</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#scsr.maths.update_arrays" title="Link to this definition"></a></dt>
 <dd><p>Update cache with intermediary arrays to use for calculations.</p>
 <p>This is a key method used to optimise calculations, with the primary
 goal of limiting any cases where we might otherwise recalculate the same
 array twice. All of the quantities cached here are used to calculate the
 functions in compute_functions.</p>
-<p>TODO: Add more detail here</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -456,7 +447,7 @@ that depend on parameters which differ between <cite>p</cite> and
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.maths.values_differ">
-<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">values_differ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.values_differ" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.maths.</span></span><span class="sig-name descname"><span class="pre">values_differ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Hashable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.maths.values_differ" title="Link to this definition"></a></dt>
 <dd><p>Check if any of the values for the given keys differ between d1 &amp; d2.</p>
 <blockquote>
 <div><p>d1 (dict): Dictionary.</p>
@@ -474,41 +465,41 @@ that depend on parameters which differ between <cite>p</cite> and
 
 </section>
 <section id="module-scsr.plots">
-<span id="scsr-plots-module"></span><h2>scsr.plots module<a class="headerlink" href="#module-scsr.plots" title="Permalink to this heading"></a></h2>
+<span id="scsr-plots-module"></span><h2>scsr.plots module<a class="headerlink" href="#module-scsr.plots" title="Link to this heading"></a></h2>
 <p>plot the results from the thing bla</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.plots.generate_plots">
-<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">generate_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.generate_plots" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">generate_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.generate_plots" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.plots.write_plot">
-<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">write_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_2d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figs_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figs'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.write_plot" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">write_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_2d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figs_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figs'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.write_plot" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.plots.write_plots_from_plots_pickle">
-<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">write_plots_from_plots_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plots_pickle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figs_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.write_plots_from_plots_pickle" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.plots.</span></span><span class="sig-name descname"><span class="pre">write_plots_from_plots_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plots_pickle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figs_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.plots.write_plots_from_plots_pickle" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-scsr.results">
-<span id="scsr-results-module"></span><h2>scsr.results module<a class="headerlink" href="#module-scsr.results" title="Permalink to this heading"></a></h2>
+<span id="scsr-results-module"></span><h2>scsr.results module<a class="headerlink" href="#module-scsr.results" title="Link to this heading"></a></h2>
 <p>Module defining objects used for managing matrices of results.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.ChunkedEpsilonResults">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ChunkedEpsilonResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedEpsilonResults" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ChunkedEpsilonResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedEpsilonResults" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.ChunkedResults" title="scsr.results.ChunkedResults"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChunkedResults</span></code></a>, <a class="reference internal" href="#scsr.results.EpsilonResults" title="scsr.results.EpsilonResults"><code class="xref py py-class docutils literal notranslate"><span class="pre">EpsilonResults</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ChunkedEpsilonResults.get_epsilon_at_index">
-<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedEpsilonResults.get_epsilon_at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedEpsilonResults.get_epsilon_at_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.ChunkedResults">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ChunkedResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ChunkedResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.Results" title="scsr.results.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a></p>
 <p>Combine the results of a set of runs.</p>
 <dl class="field-list simple">
@@ -518,54 +509,54 @@ that depend on parameters which differ between <cite>p</cite> and
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ChunkedResults.get_m_n_array_from_index">
-<span class="sig-name descname"><span class="pre">get_m_n_array_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults.get_m_n_array_from_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_m_n_array_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults.get_m_n_array_from_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ChunkedResults.reconstruct_readable_param_args">
-<span class="sig-name descname"><span class="pre">reconstruct_readable_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults.reconstruct_readable_param_args" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">reconstruct_readable_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ChunkedResults.reconstruct_readable_param_args" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResults">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">EpsilonResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">EpsilonResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.Results" title="scsr.results.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResults.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.from_dict" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.from_dict" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResults.get_epsilon_at_index">
-<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.get_epsilon_at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.get_epsilon_at_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResults.get_pickle_type">
-<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.get_pickle_type" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResults.get_pickle_type" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResultsProcessor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">EpsilonResultsProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">EpsilonResultsProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.ProcessorBase" title="scsr.results.ProcessorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessorBase</span></code></a>, <a class="reference internal" href="#scsr.results.EpsilonResults" title="scsr.results.EpsilonResults"><code class="xref py py-class docutils literal notranslate"><span class="pre">EpsilonResults</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResultsProcessor.add_m_n_arrays">
-<span class="sig-name descname"><span class="pre">add_m_n_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.add_m_n_arrays" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_m_n_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.add_m_n_arrays" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResultsProcessor.numpyify">
-<span class="sig-name descname"><span class="pre">numpyify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.numpyify" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">numpyify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.numpyify" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResultsProcessor.reserve_memory">
-<span class="sig-name descname"><span class="pre">reserve_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.reserve_memory" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">reserve_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.reserve_memory" title="Link to this definition"></a></dt>
 <dd><p>reserve memory for the arrays.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -579,158 +570,158 @@ that depend on parameters which differ between <cite>p</cite> and
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.EpsilonResultsProcessor.size_estimate">
-<span class="sig-name descname"><span class="pre">size_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.size_estimate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">size_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.EpsilonResultsProcessor.size_estimate" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.PickleType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">PickleType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.PickleType" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">PickleType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.PickleType" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scsr.results.PickleType.EPSILON_PLOTS">
-<span class="sig-name descname"><span class="pre">EPSILON_PLOTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#scsr.results.PickleType.EPSILON_PLOTS" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">EPSILON_PLOTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#scsr.results.PickleType.EPSILON_PLOTS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scsr.results.PickleType.EPSILON_VALUES">
-<span class="sig-name descname"><span class="pre">EPSILON_VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#scsr.results.PickleType.EPSILON_VALUES" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">EPSILON_VALUES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#scsr.results.PickleType.EPSILON_VALUES" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="scsr.results.PickleType.M_N_ARRAYS">
-<span class="sig-name descname"><span class="pre">M_N_ARRAYS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#scsr.results.PickleType.M_N_ARRAYS" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">M_N_ARRAYS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#scsr.results.PickleType.M_N_ARRAYS" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.PlotIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">PlotIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.PlotIterator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">PlotIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.PlotIterator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.ProcessorBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ProcessorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ProcessorBase" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ProcessorBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ProcessorBase" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.Results" title="scsr.results.Results"><code class="xref py py-class docutils literal notranslate"><span class="pre">Results</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ProcessorBase.get_tasks">
-<span class="sig-name descname"><span class="pre">get_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ProcessorBase.get_tasks" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_tasks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ProcessorBase.get_tasks" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.Results">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">Results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">Results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.ResultsBase" title="scsr.results.ResultsBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResultsBase</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.from_dict" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.from_dict" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.get_dtype">
-<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_dtype" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_dtype</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_dtype" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.get_epsilon_at_index">
-<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_epsilon_at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_epsilon_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_epsilon_at_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.get_m_n_array_from_index">
-<span class="sig-name descname"><span class="pre">get_m_n_array_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_m_n_array_from_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_m_n_array_from_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_m_n_array_from_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.get_m_n_array_from_values">
-<span class="sig-name descname"><span class="pre">get_m_n_array_from_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_m_n_array_from_values" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_m_n_array_from_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_m_n_array_from_values" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.get_pickle_type">
-<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_pickle_type" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.get_pickle_type" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.Results.iter_plots">
-<span class="sig-name descname"><span class="pre">iter_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('w',</span> <span class="pre">'Kx')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.iter_plots" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">iter_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('w',</span> <span class="pre">'Kx')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.Results.iter_plots" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ResultsBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ResultsBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.as_dict">
-<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.as_dict" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.as_dict" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.get_param_args">
-<span class="sig-name descname"><span class="pre">get_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_param_args" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_param_args" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.get_param_at_index">
-<span class="sig-name descname"><span class="pre">get_param_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_param_at_index" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_param_at_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_param_at_index" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.get_pickle_type">
-<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_pickle_type" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_pickle_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.get_pickle_type" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.param_combination_count">
-<span class="sig-name descname"><span class="pre">param_combination_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.param_combination_count" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">param_combination_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.param_combination_count" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.parameter_combinations">
-<span class="sig-name descname"><span class="pre">parameter_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.parameter_combinations" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">parameter_combinations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.parameter_combinations" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.reconstruct_readable_param_args">
-<span class="sig-name descname"><span class="pre">reconstruct_readable_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.reconstruct_readable_param_args" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">reconstruct_readable_param_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_chunks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.reconstruct_readable_param_args" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsBase.update_metadata">
-<span class="sig-name descname"><span class="pre">update_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.update_metadata" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsBase.update_metadata" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ResultsProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">ResultsProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.complex128'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#scsr.results.ProcessorBase" title="scsr.results.ProcessorBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessorBase</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor.add_m_n_array">
-<span class="sig-name descname"><span class="pre">add_m_n_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.add_m_n_array" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_m_n_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.add_m_n_array" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor.add_m_n_arrays">
-<span class="sig-name descname"><span class="pre">add_m_n_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.add_m_n_arrays" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_m_n_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrays</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.add_m_n_arrays" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor.numpyify">
-<span class="sig-name descname"><span class="pre">numpyify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.numpyify" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">numpyify</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.numpyify" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor.reserve_memory">
-<span class="sig-name descname"><span class="pre">reserve_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.reserve_memory" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">reserve_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.reserve_memory" title="Link to this definition"></a></dt>
 <dd><p>reserve memory for the arrays.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -744,29 +735,29 @@ that depend on parameters which differ between <cite>p</cite> and
 
 <dl class="py method">
 <dt class="sig sig-object py" id="scsr.results.ResultsProcessor.size_estimate">
-<span class="sig-name descname"><span class="pre">size_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.size_estimate" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">size_estimate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.ResultsProcessor.size_estimate" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.results.calculate_m_n_sizes">
-<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">calculate_m_n_sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.calculate_m_n_sizes" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">calculate_m_n_sizes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.calculate_m_n_sizes" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.results.load_results">
-<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">load_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pickle_files</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.load_results" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">load_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pickle_files</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.load_results" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scsr.results.readable_filesize">
-<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">readable_filesize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'B'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.readable_filesize" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">scsr.results.</span></span><span class="sig-name descname"><span class="pre">readable_filesize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'B'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scsr.results.readable_filesize" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </section>
 <section id="module-scsr">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-scsr" title="Permalink to this heading"></a></h2>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-scsr" title="Link to this heading"></a></h2>
 </section>
 </section>
 

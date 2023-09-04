@@ -19,7 +19,7 @@ except ImportError:
 xp = np
 FUNCTIONS = {"A2", "A1", "G", "H"}
 KNOWN_PARAMS = {"P", "w", "Kx", "L", "Ln", "tau", "steps", "lc"}
-EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm", "Ptilde")
+EPSILON_FUNCTIONS = ("epsp", "epsm", "Hinvp", "Hinvm", "Chip","Chim")
 PARAM_DEFAULTS = {
     #  DEFINES SIZE OF FUNCTION MATRICES
     # "m_n_size": 2,
@@ -261,8 +261,6 @@ def update_arrays(p: dict[str, ArrayLike], cache: dict[str, ArrayLike]) -> None:
     array twice. All of the quantities cached here are used to calculate the
     functions in compute_functions.
 
-    TODO: Add more detail here
-
     Args:
         p: The parameters to use to calculate the quantities. Only values
             that depend on parameters which differ between `p` and
@@ -416,12 +414,9 @@ def update_arrays(p: dict[str, ArrayLike], cache: dict[str, ArrayLike]) -> None:
 
 # @profile
 def compute_functions(functions, p, cache, result_only=False):
-    """Compute a function. MORE DETAIL COULD HELP - MAYBE A BETTER NAME?
+    """
 
-    - Calculates each function as a function of Vf, theta and phi
-    - Performs the integral by multiplying by sin(theta)
-
-    TODO: defo add more detail here
+    Computes the relevant H,G,A1,A2 matrices with the inclusion of the Fuchs specularity parameter. 
 
     Args:
         functions (list[str]): Functions to compute. Can include ("H", "A1", "A2", "G").
@@ -655,7 +650,7 @@ def get_epsilon_at_index(results, index: int) -> Tuple[ndarray, ...]:
     A_minus = np.matrix(A[1::2, 1::2]).T
 
     chi_plus = np.array(np.linalg.inv(iden_w_sq - H_plus - G_vec_plus) * A_minus)
-    # chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)
+    chi_minus = np.array(np.linalg.inv(iden_w_sq - H_minus - G_vec_minus) * A_minus)
 
     # Defining constants
     k = 2
@@ -686,9 +681,12 @@ def get_epsilon_at_index(results, index: int) -> Tuple[ndarray, ...]:
     return (
         # It's critical that the order of the terms here matches the order
         # of EPSILON_FUNCTIONS.
+        #TODO: ensure this is pushed to main branch
         epsp[0, 0],
         epsm[0, 0],
         Fp,
         Fm,
-        P_tilde,
+        chi_plus,
+        chi_minus
+
     )

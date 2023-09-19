@@ -509,6 +509,7 @@ class PlotIterator:
                 full_index = tuple(full_index)
 
                 eps = results.get_epsilon_at_index(full_index)
+                eps = [*eps,-1,-1]
                 plot_coord = (full_index[axes_i[1]], full_index[axes_i[0]])
                 for j, (eps_f, plot) in enumerate(eps_plots.items()):
                     plot[plot_coord] = eps[j]

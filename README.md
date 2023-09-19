@@ -1,6 +1,6 @@
 # Semi-classical Slab Response Function
 
-This repository allows for the calculation of the Density-Density Response Function of a metal slab, using the Semi-Classical method, as outlined in this [paper] (https://www.mdpi.com/2673-6497/4/3/17).
+This repository allows for the calculation of the Density-Density Response Function of a metal slab, using the Semi-Classical method, as outlined in this [paper](https://www.mdpi.com/2673-6497/4/3/17).
 
 
 ## Requirements

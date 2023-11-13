@@ -135,7 +135,7 @@ also deals with compiling results from chunked <code class="code docutils litera
 </div>
 <section id="Parameters:">
 <h2>Parameters:<a class="headerlink" href="#Parameters:" title="Link to this heading"></a></h2>
-<p><code class="code docutils literal notranslate"><span class="pre">w</span></code>, <code class="code docutils literal notranslate"><span class="pre">Nf_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">wp</span></code>, <code class="code docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="code docutils literal notranslate"><span class="pre">P</span></code>, <code class="code docutils literal notranslate"><span class="pre">L</span></code>, <code class="code docutils literal notranslate"><span class="pre">tau</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ln</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="code docutils literal notranslate"><span class="pre">Vf</span></code>, <code class="code docutils literal notranslate"><span class="pre">lc</span></code></p>
+<p><code class="code docutils literal notranslate"><span class="pre">L</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ky</span></code>, <code class="code docutils literal notranslate"><span class="pre">wp</span></code>, <code class="code docutils literal notranslate"><span class="pre">w</span></code>, <code class="code docutils literal notranslate"><span class="pre">Kx</span></code>, <code class="code docutils literal notranslate"><span class="pre">lc</span></code>, <code class="code docutils literal notranslate"><span class="pre">tau</span></code>, <code class="code docutils literal notranslate"><span class="pre">Nf_m</span></code>, <code class="code docutils literal notranslate"><span class="pre">Vf</span></code>, <code class="code docutils literal notranslate"><span class="pre">P</span></code>, <code class="code docutils literal notranslate"><span class="pre">Ln</span></code></p>
 <ul class="simple">
 <li><p><code class="code docutils literal notranslate"><span class="pre">steps</span></code>: The number of discrete steps in theta/phi axes. (The theta by phi
 grid is steps^2).</p></li>
@@ -153,16 +153,16 @@ the main thread (No need to adjust).</p></li>
                  <span class="p">[</span><span class="o">-</span><span class="n">g</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">G</span> <span class="n">GPU_IDS</span> <span class="p">[</span><span class="n">GPU_IDS</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="o">-</span><span class="n">A</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">SUBPROCESS_COUNT</span><span class="p">]</span>
                  <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">E</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span> <span class="n">seconds</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">C</span> <span class="n">CHUNKS</span><span class="p">]</span>
                  <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">CHUNK_PARAMETER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">I</span> <span class="n">CHUNK_ID</span><span class="p">]</span>
-                 <span class="p">[{</span><span class="n">G</span><span class="p">,</span><span class="n">A2</span><span class="p">,</span><span class="n">H</span><span class="p">,</span><span class="n">A1</span><span class="p">}</span> <span class="o">...</span><span class="p">]</span>
+                 <span class="p">[{</span><span class="n">A2</span><span class="p">,</span><span class="n">A1</span><span class="p">,</span><span class="n">H</span><span class="p">,</span><span class="n">G</span><span class="p">}</span> <span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="inputs">
 <h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading"></a></h2>
 <dl class="option-list">
 <dt><kbd>functions</kbd></dt>
-<dd><p>Possible choices: G, A2, H, A1</p>
+<dd><p>Possible choices: A2, A1, H, G</p>
 <p>Functions.</p>
-<p>Default: {’G’, ‘A2’, ‘H’, ‘A1’}</p>
+<p>Default: {’A2’, ‘A1’, ‘H’, ‘G’}</p>
 </dd>
 <dt><kbd>-p, --params</kbd></dt>
 <dd><p>Parameters to override. space-separated list of ‘[PARAM]=[VALUE]’ pairs.</p>

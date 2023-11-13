@@ -107,6 +107,7 @@ class CalculateWorker(mp.Process):
         self.collected_queue = mp.Queue()
         self.functions = functions
         self.dtype = dtype
+        self.process_id = process_id
         self.gpu_id = gpu_id
         self.use_gpu = self.gpu_id is not None
 
@@ -137,11 +138,11 @@ class CalculateWorker(mp.Process):
             param_batch = self.param_queue.get()
             if param_batch is None:
                 return
+            self.collected_queue.get()
             batch_results = []
             for iteration_params in param_batch:
                 params = self.parameters.copy()
                 params.update(iteration_params)
-                self.collected_queue.get()
                 mn_arrays = [
                     maths.xp.full([iteration_params["mn"]] * 2, -1, dtype=self.dtype)
                     for _ in self.functions

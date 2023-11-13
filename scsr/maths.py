@@ -2,7 +2,7 @@
 import operator
 import math
 import itertools
-from typing import Tuple, Callable, Iterable, Hashable, Generator
+from typing import Tuple, Callable, Iterable, Hashable, Generator, List
 
 # Third Party
 import numpy as np
@@ -157,7 +157,7 @@ def values_differ(d1: dict, d2: dict, keys: Iterable[Hashable]):
 
 
 def op_across_axes(
-    arr_a: ndarray, arr_b: ndarray, axes: list[int], op: ArrayOp
+    arr_a: ndarray, arr_b: ndarray, axes: List[int], op: ArrayOp
 ) -> ndarray:
     """Perform operation on two arrays along the given axes.
 
@@ -219,7 +219,7 @@ def sadd(arr_a: ndarray, arr_b: ndarray) -> ndarray:
     return stack_op(arr_a, arr_b, operator.add)
 
 
-def mul_axes(arr_a: ndarray, arr_b: ndarray, axes: list[int]) -> ndarray:
+def mul_axes(arr_a: ndarray, arr_b: ndarray, axes: List[int]) -> ndarray:
     """Alias for `op_across_axes(arr_a, arr_b, axes, operator.mul)`"""
     return op_across_axes(arr_a, arr_b, axes, operator.mul)
 

@@ -1,5 +1,4 @@
 # Standard
-from __future__ import annotations
 import operator
 import math
 import itertools
@@ -7,7 +6,6 @@ from typing import Tuple, Callable, Iterable, Hashable, Generator
 
 # Third Party
 import numpy as np
-from numpy.typing import NDArray, ArrayLike
 from numpy import ndarray as ndarray
 
 try:
@@ -253,7 +251,7 @@ def mn_mul(arr_a: ndarray, arr_b: ndarray) -> ndarray:
     return op_across_axes(arr_a, arr_b, axes, operator.mul)
 
 
-def update_arrays(p: dict[str, ArrayLike], cache: dict[str, ArrayLike]) -> None:
+def update_arrays(p: dict[str, ndarray], cache: dict[str, ndarray]) -> None:
     """Update cache with intermediary arrays to use for calculations.
 
     This is a key method used to optimise calculations, with the primary

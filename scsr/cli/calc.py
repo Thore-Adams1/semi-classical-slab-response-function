@@ -96,97 +96,75 @@ PARAM_DESCRIPTIONS = {
     ),
 }
 
+class CalculateWorker(mp.Process):
+    def __init__(self, args, param_queue, result_queue, progress_value, functions, dtype, process_id, gpu_id=None):
+        super().__init__()
+        self.args = args
+        self.parameters = None
+        self.param_queue = param_queue
+        self.progress = progress_value
+        self.result_queue = result_queue
+        self.collected_queue = mp.Queue()
+        self.functions = functions
+        self.dtype = dtype
+        self.gpu_id = gpu_id
+        self.use_gpu = self.gpu_id is not None
 
-def worker_calculate(
-    param_queue,
-    result_queue,
-    progress,
-    functions,
-    parameters,
-    dtype,
-    process_id=None,
-    use_gpu=False,
-):
-    """Worker process for multiprocessing.
+    def _worker_calculate(self):
+        """Worker process for multiprocessing.
 
-    Args:
-        params_pipe (mp.Pipe): Pipe to read parameters from.
-        done_counter_array (mp.Array): Counter to keep track of how many jobs are done.
-        process_id (int): Process ID.
-        parameters (list[str]): Parameters to expect.
-    """
-    try:
-        import psutil
-    except ImportError:
-        psutil = None
-        print(
-            "psutil not found, pip installing is recommended. It's used to check "
-            "memory usage + kill processes when at risk of an out-of-memory error."
-        )
-    C = {}
-    max_tile_size = parameters["max_tile_size"]
-    while True:
-        if psutil is not None:
-            if psutil.virtual_memory().percent > 95:
-                print("Memory usage is at 95%, killing 1 subprocess.")
+        Args:
+            params_pipe (mp.Pipe): Pipe to read parameters from.
+            done_counter_array (mp.Array): Counter to keep track of how many jobs are done.
+            parameters (list[str]): Parameters to expect.
+        """
+        try:
+            import psutil
+        except ImportError:
+            psutil = None
+            print(
+                "psutil not found, pip installing is recommended. It's used to check "
+                "memory usage + kill processes when at risk of an out-of-memory error."
+            )
+        C = {}
+        max_tile_size = self.parameters["max_tile_size"]
+        while True:
+            if psutil is not None:
+                if psutil.virtual_memory().percent > 95:
+                    print("Memory usage is at 95%, killing 1 subprocess.")
+                    return
+
+            param_batch = self.param_queue.get()
+            if param_batch is None:
                 return
+            batch_results = []
+            for iteration_params in param_batch:
+                params = self.parameters.copy()
+                params.update(iteration_params)
+                self.collected_queue.get()
+                mn_arrays = [
+                    maths.xp.full([iteration_params["mn"]] * 2, -1, dtype=self.dtype)
+                    for _ in self.functions
+                ]
+                for chunk, arrays in process_chunks(params, self.functions, max_tile_size, C):
+                    self.progress.value += (chunk[1] - chunk[0]) * (chunk[3] - chunk[2])
+                    for i, arr in enumerate(mn_arrays):
+                        arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
+                if self.use_gpu:
+                    mn_arrays = [maths.ensure_numpy_array(arr).data for arr in mn_arrays]
+                batch_results.append((params["i"], mn_arrays))
 
-        param_batch = param_queue.get()
-        if param_batch is None:
-            return
-        batch_results = []
-        for iteration_params in param_batch:
-            params = parameters.copy()
-            params.update(iteration_params)
-            mn_arrays = [
-                maths.xp.full([iteration_params["mn"]] * 2, -1, dtype=dtype)
-                for _ in functions
-            ]
-            for chunk, arrays in process_chunks(params, functions, max_tile_size, C):
-                progress.value += (chunk[1] - chunk[0]) * (chunk[3] - chunk[2])
-                for i, arr in enumerate(mn_arrays):
-                    arr[chunk[0] : chunk[1], chunk[2] : chunk[3]] = arrays[i]
-            if use_gpu:
-                mn_arrays = [maths.ensure_numpy_array(arr) for arr in mn_arrays]
-            batch_results.append((params["i"], mn_arrays))
+            if batch_results:
+                self.result_queue.put(batch_results)
 
-        if batch_results:
-            result_queue.put(batch_results)
-
-
-def worker_process(
-    param_queue,
-    result_queue,
-    progress,
-    functions,
-    args,
-    dtype=None,
-    process_id=None,
-    gpu_id=None,
-):
-    # import cProfile
-    # cProfile.runctx(
-    #     "worker_calculate(param_queue, result_queue, functions, parameters, i=i)",
-    #     globals(),
-    #     locals(),
-    #     f"debug\\prof\\prof{i+1}.prof",
-    # )
-    if gpu_id is not None:
-        maths.set_gpu_mode(True)
-        maths.cp.cuda.Device(gpu_id).use()
-    if dtype is None:
-        dtype = maths.xp.complex128
-    parameters, _ = get_parameters(args)
-    worker_calculate(
-        param_queue,
-        result_queue,
-        progress,
-        functions,
-        parameters,
-        dtype,
-        process_id=process_id,
-        use_gpu=gpu_id is not None,
-    )
+    def run(self):
+        if self.gpu_id is not None:
+            maths.set_gpu_mode(True)
+            maths.cp.cuda.Device(self.gpu_id).use()
+        if dtype is None:
+            dtype = maths.xp.complex128
+        self.parameters, _ = get_parameters(self.args)
+        self._worker_calculate()
 
 
 def process_chunks(params, functions, chunk_size, cache):
@@ -335,6 +313,9 @@ def main():
                     args,
                 ),
                 kwargs={"process_id": i, "gpu_id": gpu_id, "dtype": dtype},
+            )
+            process = CalculateWorker(
+                args, param_queue, result_queue, progress_value, args.functions, dtype, gpu_id
             )
             processes.append(process)
         with ThreadPoolExecutor(max_workers=args.subprocess_count) as executor:

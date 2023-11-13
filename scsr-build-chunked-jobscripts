@@ -1,0 +1,6 @@
+#! /usr/bin/env python
+
+
+if __name__ == "__main__":
+    from scsr.cli import build_chunked_jobscripts
+    build_chunked_jobscripts.main()

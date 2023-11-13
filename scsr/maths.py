@@ -2,7 +2,7 @@
 import operator
 import math
 import itertools
-from typing import Tuple, Callable, Iterable, Hashable, Generator, List
+from typing import Tuple, Callable, Iterable, Hashable, Generator, List, Dict
 
 # Third Party
 import numpy as np
@@ -251,7 +251,7 @@ def mn_mul(arr_a: ndarray, arr_b: ndarray) -> ndarray:
     return op_across_axes(arr_a, arr_b, axes, operator.mul)
 
 
-def update_arrays(p: dict[str, ndarray], cache: dict[str, ndarray]) -> None:
+def update_arrays(p: Dict[str, ndarray], cache: Dict[str, ndarray]) -> None:
     """Update cache with intermediary arrays to use for calculations.
 
     This is a key method used to optimise calculations, with the primary

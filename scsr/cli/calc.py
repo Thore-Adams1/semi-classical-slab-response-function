@@ -104,7 +104,6 @@ class CalculateWorker(mp.Process):
         self.param_queue = param_queue
         self.progress = progress_value
         self.result_queue = result_queue
-        self.collected_queue = mp.Queue()
         self.functions = functions
         self.dtype = dtype
         self.process_id = process_id
@@ -138,7 +137,6 @@ class CalculateWorker(mp.Process):
             param_batch = self.param_queue.get()
             if param_batch is None:
                 return
-            self.collected_queue.get()
             batch_results = []
             for iteration_params in param_batch:
                 params = self.parameters.copy()
@@ -162,8 +160,8 @@ class CalculateWorker(mp.Process):
         if self.gpu_id is not None:
             maths.set_gpu_mode(True)
             maths.cp.cuda.Device(self.gpu_id).use()
-        if dtype is None:
-            dtype = maths.xp.complex128
+        if self.dtype is None:
+            self.dtype = maths.xp.complex128
         self.parameters, _ = get_parameters(self.args)
         self._worker_calculate()
 
@@ -304,17 +302,6 @@ def main():
         ):
             progress_value = mp.Value("i", 0, lock=False)
             progress_values.append(progress_value)
-            process = mp.Process(
-                target=worker_process,
-                args=(
-                    param_queue,
-                    result_queue,
-                    progress_value,
-                    args.functions,
-                    args,
-                ),
-                kwargs={"process_id": i, "gpu_id": gpu_id, "dtype": dtype},
-            )
             process = CalculateWorker(
                 args, param_queue, result_queue, progress_value, args.functions, dtype, gpu_id
             )

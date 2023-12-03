@@ -423,7 +423,9 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
             )
 
     def size_estimate(self):
-        return np.sum([arr.size for arr in self.epsilon_values.values()], dtype=np.int64) * maths.xp.dtype(self.dtype).itemsize
+        total_arr_size = [arr.size for arr in self.epsilon_values.values()]
+        dtype_size = maths.xp.dtype(self.dtype).itemsize
+        return np.sum(total_arr_size, dtype=np.int64) * dtype_size
 
     def reserve_memory(self):
         """reserve memory for the arrays.

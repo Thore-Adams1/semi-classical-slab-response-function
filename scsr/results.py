@@ -4,6 +4,7 @@ from enum import Enum
 import itertools
 from bisect import bisect_left
 from collections import defaultdict
+from typing import Tuple, Iterator
 import pickle
 
 # Third Party
@@ -410,12 +411,15 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
     def __init__(self, functions, parameters, variable_params, dtype=np.complex128):
         super().__init__(functions, parameters, variable_params, dtype=dtype)
         self.epsilon_functions = maths.EPSILON_FUNCTIONS
-        self.epsilon_values = np.zeros(
-            (len(self.epsilon_functions), self.m_n_array_total), dtype=self.dtype
-        )
+        self.epsilon_values = {}
+        for eps_fn, shape in maths.get_epsilon_function_shapes(self).items():
+            self.epsilon_values[eps_fn] = np.zeros(
+                (*shape, self.m_n_array_total),
+                dtype=self.dtype
+            )
 
     def size_estimate(self):
-        return (self.epsilon_values.size) * maths.xp.dtype(self.dtype).itemsize
+        return np.sum([arr.size for arr in self.epsilon_values.values()], dtype=np.int64) * maths.xp.dtype(self.dtype).itemsize
 
     def reserve_memory(self):
         """reserve memory for the arrays.
@@ -424,7 +428,8 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
             int: filesize estimate in bytes.
         """
         # reserve array mem - so that memory errors are raised early
-        self.epsilon_values.fill(0)
+        for arr in self.epsilon_values.values():
+            arr.fill(0)
 
     def numpyify(self):
         for f, arrs in self.m_n_arrays.items():
@@ -439,7 +444,8 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
             self.m_n_arrays[f][i] = maths.ensure_numpy_array(arr)
         index = np.unravel_index(i, self.index_shape)
         eps = maths.get_epsilon_at_index(self, index)
-        self.epsilon_values[:, i] = eps
+        for eps_arr, value in zip(self.epsilon_values.values(), eps):
+            eps_arr[..., i] = value
         for f in self.functions:
             self.m_n_arrays[f][i] = None
 
@@ -470,6 +476,21 @@ class PlotIterator:
     def __len__(self):
         return self.length
 
+    def _iter_axes_epsilon_for_index(self, extra_axes_index: Tuple[int], key_params: dict):
+        for axes_index in self.combination_indices:
+            axes_index = list(axes_index)
+            extra_axes_i = list(extra_axes_index)
+            full_index = []
+            for v in self.results.variable_params:
+                if v in self.axes:
+                    axis_i = axes_index[self.axes.index(v)]
+                    axis_v = self.results.variable_params[v][axis_i]
+                    key_params[v] = axis_v
+                    full_index.append(axis_i)
+                else:
+                    full_index.append(extra_axes_i.pop(0))
+            yield tuple(full_index), self.results.get_epsilon_at_index(full_index)
+
     def __iter__(self):
         return self._iter()
 
@@ -480,37 +501,26 @@ class PlotIterator:
             results.variable_param_indices[axes[0]],
             results.variable_param_indices[axes[1]],
         )
-        for i, extra_axes_index in enumerate(self.extra_axes_indices):
+        eps_shapes = maths.get_epsilon_function_shapes(self.results)
+        for extra_axes_index in self.extra_axes_indices:
             key_params = src_key_params.copy()
             for j, axis in enumerate(self.extra_axes):
                 key_params[axis] = results.variable_params[axis][extra_axes_index[j]]
+
             eps_plots = {}
-            for eps_f in maths.EPSILON_FUNCTIONS:
+            for eps_f, eps_shape in eps_shapes.items():
                 eps_plots[eps_f] = np.empty(
                     [
                         len(results.variable_params[axes[1]]),
                         len(results.variable_params[axes[0]]),
+                        *eps_shape
                     ],
                     dtype=np.complex128,
                 )
-            for axes_index in self.combination_indices:
-
-                axes_index = list(axes_index)
-                extra_axes_i = list(extra_axes_index)
-                full_index = []
-                for v in results.variable_params:
-                    if v in axes:
-                        axis_i = axes_index[axes.index(v)]
-                        axis_v = results.variable_params[v][axis_i]
-                        key_params[v] = axis_v
-                        full_index.append(axis_i)
-                    else:
-                        full_index.append(extra_axes_i.pop(0))
-                full_index = tuple(full_index)
-
-                eps = results.get_epsilon_at_index(full_index)
-                eps = [*eps,-1,-1]
-                plot_coord = (full_index[axes_i[1]], full_index[axes_i[0]])
+                
+            axes_epsilon_iter = self._iter_axes_epsilon_for_index(extra_axes_index, key_params)
+            for index, eps in axes_epsilon_iter:
+                plot_coord = (index[axes_i[1]], index[axes_i[0]])
                 for j, (eps_f, plot) in enumerate(eps_plots.items()):
                     plot[plot_coord] = eps[j]
 

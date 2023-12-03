@@ -581,6 +581,13 @@ def ensure_numpy_array(obj: ndarray) -> ndarray:
     return obj
 
 
+def get_epsilon_function_shapes(results):
+    shapes_by_fn = dict.fromkeys(EPSILON_FUNCTIONS, ())
+    lc = results.parameters["lc"]
+    shapes_by_fn["Chim"] = shapes_by_fn["Chip"] = (lc, lc)
+    return shapes_by_fn
+
+
 def get_epsilon_at_index(results, index: int) -> Tuple[ndarray, ...]:
     """Calculate stuff.
 

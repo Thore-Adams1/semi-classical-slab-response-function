@@ -393,7 +393,11 @@ class EpsilonResults(Results):
         return instance
 
     def get_epsilon_at_index(self, index):
-        return self.epsilon_values[:, np.ravel_multi_index(index, self.index_shape)]
+        ravelled_index = np.ravel_multi_index(index, self.index_shape)
+        return tuple(
+            self.epsilon_values[fn][ravelled_index]
+            for fn in self.epsilon_functions
+        )
 
 
 class ChunkedEpsilonResults(ChunkedResults, EpsilonResults):
@@ -414,7 +418,7 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
         self.epsilon_values = {}
         for eps_fn, shape in maths.get_epsilon_function_shapes(self).items():
             self.epsilon_values[eps_fn] = np.zeros(
-                (*shape, self.m_n_array_total),
+                (self.m_n_array_total, *shape),
                 dtype=self.dtype
             )
 
@@ -445,7 +449,7 @@ class EpsilonResultsProcessor(ProcessorBase, EpsilonResults):
         index = np.unravel_index(i, self.index_shape)
         eps = maths.get_epsilon_at_index(self, index)
         for eps_arr, value in zip(self.epsilon_values.values(), eps):
-            eps_arr[..., i] = value
+            eps_arr[i, ...] = value
         for f in self.functions:
             self.m_n_arrays[f][i] = None
 
@@ -462,9 +466,9 @@ class PlotIterator:
             self.extra_axes_count = np.product(
                 [len(variable_params[p]) for p in extra_axes]
             )
-            self.extra_axes_indices = itertools.product(
+            self.extra_axes_indices = list(itertools.product(
                 *[range(len(variable_params[p])) for p in extra_axes]
-            )
+            ))
         else:
             self.extra_axes_indices = [()]
             self.extra_axes_count = 1
@@ -517,7 +521,7 @@ class PlotIterator:
                     ],
                     dtype=np.complex128,
                 )
-                
+
             axes_epsilon_iter = self._iter_axes_epsilon_for_index(extra_axes_index, key_params)
             for index, eps in axes_epsilon_iter:
                 plot_coord = (index[axes_i[1]], index[axes_i[0]])

@@ -647,7 +647,7 @@ def get_epsilon_at_index(results, index: int) -> Tuple[ndarray, ...]:
     # Calculating P tilde:
     A1 = results.get_m_n_array_from_index("A1", index)
     A2 = results.get_m_n_array_from_index("A2", index)
-    A = A1 - A2
+    A = A1 + A2
 
     L = results.get_param_at_index("L", index)
 
